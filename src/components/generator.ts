@@ -105,7 +105,7 @@ export class GPXDataProcessor {
         const section = this.pickSection(startKm, endKm);
 
         // Group points by kilometer segment
-        const groupedByKm = _.groupBy(section, point => Math.floor(point.distance / sectionLength));
+        const groupedByKm = _.groupBy(section, (point: Point) => Math.floor(point.distance / sectionLength));
 
         // Initialize variables for the climb profile
         const sections: Section[] = [];
@@ -139,7 +139,6 @@ export class GPXDataProcessor {
             };
 
             sections.push(newSection);
-            console.log(newSection);
 
             // Update cumulative elevation
             cumulativeElevation += roundedMaxElevation - roundedMinElevation;
@@ -164,7 +163,7 @@ export class GPXDataProcessor {
             sections: sections.map((kmData, index) => ({
                 start: kmData.distance,
                 end: kmData.distance + 1,
-                gradient: (kmData.delta / sectionLength) * 100,
+                gradient: Math.round((kmData.delta / sectionLength) * 100),
                 delta: kmData.delta,
                 altitude: index < sections.length - 1 ? sections[index + 1].maxElevation : previousAltitude
             }))
