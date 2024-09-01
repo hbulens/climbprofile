@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ElevationPerKilometer, GPXDataProcessor } from './components/generator';
-import ClimbProfile, { ElevationPoint } from './components/chart';
+import { ClimbProfile, GPXDataProcessor } from './components/generator';
+import ClimbProfileChart from './components/chart';
 
 const App: React.FC = () => {
   // State for start and end kilometers
@@ -8,7 +8,7 @@ const App: React.FC = () => {
   const [endKm, setEndKm] = useState<number>(Infinity);
 
   // State for filtered elevation data  
-  const [elevationData, setElevationData] = useState<ElevationPerKilometer[]>([]);
+  const [climbProfile, setClimbProfile] = useState<ClimbProfile>();
   const [gpx, setGpx] = useState<string>("");
 
   // Handle file upload
@@ -27,15 +27,13 @@ const App: React.FC = () => {
   // Calculate profile data and apply filters
   const calculateProfile = (gpxData: string) => {
     const processor = new GPXDataProcessor(gpxData);
-    const climbProfile = processor.calculateElevationPerKilometer(startKm, endKm);
-    setElevationData(climbProfile);
+    setClimbProfile(processor.calculateElevationPerKilometer(startKm, endKm + 1));
   }
 
   // Effect to recalculate profile when startKm, endKm or gpx changes
   useEffect(() => {
-    if (gpx) {
+    if (gpx)
       calculateProfile(gpx);
-    }
   }, [gpx, startKm, endKm]);
 
   return (
@@ -54,6 +52,7 @@ const App: React.FC = () => {
             min={0}
           />
         </label>
+
         <label style={{ marginLeft: '20px' }}>
           End Km:
           <input
@@ -66,7 +65,10 @@ const App: React.FC = () => {
           />
         </label>
       </div>
-      <ClimbProfile elevationData={elevationData} averageGradients={[]} />
+
+      <div style={{ margin: '20px' }}>
+        <ClimbProfileChart climbProfile={climbProfile!} />
+      </div>
     </div>
   );
 };
