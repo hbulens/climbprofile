@@ -3,17 +3,16 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - master
+      - master  # Change this to 'main' if you're using a 'main' branch
   workflow_dispatch:
 
-# Allow this job to clone the repo and create a page deployment
 permissions:
   contents: read
   pages: write
   id-token: write
-  
+
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,7 +22,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: 18  # Use the node version compatible with your project
+        node-version: 18  # Use the Node.js version compatible with your project
 
     - name: Install dependencies
       run: npm install
@@ -31,6 +30,21 @@ jobs:
     - name: Build the project
       run: npm run build
 
+    - name: Upload build output
+      uses: actions/upload-artifact@v4
+      with:
+        name: github-pages
+        path: ./dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
     - name: Deploy to GitHub Pages
-      id: deployment
       uses: actions/deploy-pages@v4
+      with:
+        artifact_name: github-pages
