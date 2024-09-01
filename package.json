@@ -1,5 +1,6 @@
 {
   "name": "climbprofile",
+  "homepage": "https://github.com/hbulens/climbprofile",
   "private": true,
   "version": "0.0.0",
   "type": "module",
