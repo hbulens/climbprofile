@@ -7,6 +7,7 @@ const App: React.FC = () => {
   const [endKm, setEndKm] = useState<number>(Infinity);
   const [climbProfile, setClimbProfile] = useState<ClimbProfile>();
   const [gpx, setGpx] = useState<string>("");
+  const [interval, setInterval] = useState<number>(1000); // Add state for interval
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -22,12 +23,12 @@ const App: React.FC = () => {
 
   const calculateProfile = (gpxData: string) => {
     const processor = new GPXDataProcessor(gpxData);
-    setClimbProfile(processor.calculateElevationPerKilometer(startKm, endKm + 1));
+    setClimbProfile(processor.calculateElevation(startKm, endKm + 1, interval));
   };
 
   useEffect(() => {
     if (gpx) calculateProfile(gpx);
-  }, [gpx, startKm, endKm]);
+  }, [gpx, startKm, endKm, interval]);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-10">
@@ -67,6 +68,21 @@ const App: React.FC = () => {
                 className="mt-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Interval (meters)</label>
+              <select
+                value={interval}
+                onChange={(e) => setInterval(parseInt(e.target.value))}
+                className="mt-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              >
+                <option value={100}>100m</option>
+                <option value={200}>200m</option>
+                <option value={500}>500m</option>
+                <option value={1000}>1000m</option>
+              </select>
+            </div>
+
           </div>
         </form>
 

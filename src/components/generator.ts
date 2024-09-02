@@ -43,12 +43,12 @@ export class GPXDataProcessor {
         this.parse(gpxData);
     }
 
-    calculateElevationPerKilometer(startKm: number = 0, endKm: number = Infinity, sectionLength: number = 1000): ClimbProfile {
+    calculateElevation(startKm: number = 0, endKm: number = Infinity, sectionLength: number = 500): ClimbProfile {
         // Filter points within the specified range
         const section = this.pickSection(startKm, endKm);
 
         // Group points by kilometer segment
-        const groupedByKm = _.groupBy(section, (point: Point) => Math.floor(point.distance / sectionLength));
+        const groupedByInterval = _.groupBy(section, (point: Point) => Math.floor(point.distance / sectionLength));
 
         // Initialize variables for the climb profile
         const sections: Section[] = [];
@@ -58,7 +58,7 @@ export class GPXDataProcessor {
         let previousAltitude = 0; // Track the altitude after each kilometer
 
         // Iterate over the grouped data using for...of and Object.entries
-        for (const [kmSegment, points] of Object.entries(groupedByKm)) {
+        for (const [kmSegment, points] of Object.entries(groupedByInterval)) {
             // Convert kmSegment to number
             const kmSegmentNumber = parseFloat(kmSegment);
 
@@ -78,7 +78,7 @@ export class GPXDataProcessor {
 
             // Add the elevation data to the array
             const newSection = {
-                distance: kmSegmentNumber,
+                distance: kmSegmentNumber * (sectionLength / 1000),
                 minElevation: roundedMinElevation,
                 maxElevation: roundedMaxElevation,
                 delta: endElevation - startElevation
@@ -115,6 +115,7 @@ export class GPXDataProcessor {
             }))
         };
 
+        console.log(climbProfile);
         return climbProfile;
     }
 

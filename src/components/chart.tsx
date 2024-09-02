@@ -56,7 +56,6 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile }) => {
         };
 
         const getAreaColor = (gradient: number) => {
-            console.log(gradient);
             // Using the original color scheme with a subtle gradient effect
             if (gradient < -2) return 'rgba(128, 128, 128, 0.7)'; // Light gray for negative gradient
             if (gradient < 4) return 'rgba(0, 255, 0, 0.7)'; // Green for gradient < 4
