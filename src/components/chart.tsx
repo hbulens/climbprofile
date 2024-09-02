@@ -147,10 +147,11 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile }) => {
 
     return (
         <div>
-            <svg ref={svgRef} />
-            <button onClick={exportToPng} className="mt-4 p-2 bg-blue-500 text-white rounded">
+            <button onClick={exportToPng} className="mt-4 mb-4 p-2 bg-orange-500 text-white rounded">
                 Export to PNG
             </button>
+
+            <svg ref={svgRef} />
         </div>
     );
 };
