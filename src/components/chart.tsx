@@ -19,6 +19,31 @@ interface ClimbProfileProps {
 const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile }) => {
     const svgRef = useRef<SVGSVGElement>(null);
 
+    const exportToPng = () => {
+        const svg = svgRef.current;
+        if (!svg) return;
+
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svg);
+
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        const img = new Image();
+        img.onload = () => {
+            canvas.width = svg.clientWidth;
+            canvas.height = svg.clientHeight;
+            context?.drawImage(img, 0, 0);
+
+            const a = document.createElement('a');
+            a.download = 'climb-profile.png';
+            a.href = canvas.toDataURL('image/png');
+            a.click();
+        };
+        img.src = `data:image/svg+xml;base64,${btoa(svgString)}`;
+    };
+
+
     useEffect(() => {
         if (!climbProfile) return;
 
@@ -121,7 +146,12 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile }) => {
     }, [climbProfile]);
 
     return (
-        <svg ref={svgRef}></svg>
+        <div>
+            <svg ref={svgRef} />
+            <button onClick={exportToPng} className="mt-4 p-2 bg-blue-500 text-white rounded">
+                Export to PNG
+            </button>
+        </div>
     );
 };
 
