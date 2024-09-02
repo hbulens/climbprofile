@@ -1,14 +1,19 @@
-<center> <img src="assets/logo.png" /> </center> <br/> 
+<div align="center">
+<img src="assets/logo.png" /> 
+</div> 
+<br/> 
 
-<center> Generate a climb profile from a GPX file. </center> 
+<div align="center">
+Generate a climb profile from a GPX file. 
+</div> 
 <br /> 
 <img src="assets/screenshot.png" />
 
 <br/>
-<center> 
+<div align="center">
 👉 See it live in action <a href="https://hbulens.github.io/climbprofile/
 " target="_blank">here</a> 👈 . 
-</center> 
+</div> 
 
 
 ## Project Overview
