@@ -12,16 +12,16 @@ Generate a climb profile from a GPX file.
 <br/>
 <div align="center">
 👉 See it live in action <a href="https://hbulens.github.io/climbprofile/
-" target="_blank">here</a> 👈 . 
+" target="_blank">here</a> 👈 
 </div> 
 
-
-## Project Overview
+## Project overview
 
 This project allows users to generate detailed climb profiles from GPX files. It's designed for cyclists, hikers, and outdoor enthusiasts who need to visualize elevation data and understand the difficulty of different routes. The application processes GPX files and outputs a graphical profile of the climb, helping users to plan and prepare for their activities.
-Features
 
-- GPX File support: Easily upload and process GPX files to generate climb profiles.
+## Features
+
+- GPX file support: Easily upload and process GPX files to generate climb profiles.
 - Interactive graphs: View detailed climb profiles with interactive graphs showing elevation changes.
 - Customizable output: Adjust settings for the climb profile to focus on specific sections or data points.
 
@@ -32,7 +32,7 @@ Before setting up the project, ensure you have the following installed:
 - Node.js (v16 or higher)
 - Bun (for managing the project)
 
-## Local Development
+## Local development
 
 To set up and run the project locally, follow these steps:
 
