@@ -43,6 +43,81 @@ export class GPXDataProcessor {
         this.parse(gpxData);
     }
 
+    calculateElevationPerKilometer(startKm: number = 0, endKm: number = Infinity, sectionLength: number = 1000): ClimbProfile {
+        // Filter points within the specified range
+        const section = this.pickSection(startKm, endKm);
+
+        // Group points by kilometer segment
+        const groupedByKm = _.groupBy(section, (point: Point) => Math.floor(point.distance / sectionLength));
+
+        // Initialize variables for the climb profile
+        const sections: Section[] = [];
+        let minElevation = Infinity;
+        let maxElevation = -Infinity;
+        let cumulativeElevation = 0;
+        let previousAltitude = 0; // Track the altitude after each kilometer
+
+        // Iterate over the grouped data using for...of and Object.entries
+        for (const [kmSegment, points] of Object.entries(groupedByKm)) {
+            // Convert kmSegment to number
+            const kmSegmentNumber = parseFloat(kmSegment);
+
+            // Calculate min and max elevation for this kilometer segment
+            const segmentMinElevation = _.minBy(points, 'ele')?.ele ?? 0;
+            const segmentMaxElevation = _.maxBy(points, 'ele')?.ele ?? 0;
+
+            // Round elevations
+            const roundedMinElevation = Math.round(segmentMinElevation);
+            const roundedMaxElevation = Math.round(segmentMaxElevation);
+
+            // Calculate the altitude at the end of this segment
+            previousAltitude = roundedMaxElevation;
+
+            const startElevation = _(points).first().ele;
+            const endElevation = _(points).last().ele;
+
+            // Add the elevation data to the array
+            const newSection = {
+                distance: kmSegmentNumber,
+                minElevation: roundedMinElevation,
+                maxElevation: roundedMaxElevation,
+                delta: endElevation - startElevation
+            };
+
+            sections.push(newSection);
+
+            // Update cumulative elevation
+            cumulativeElevation += roundedMaxElevation - roundedMinElevation;
+
+            // Update overall min and max elevation
+            minElevation = Math.min(minElevation, roundedMinElevation);
+            maxElevation = Math.max(maxElevation, roundedMaxElevation);
+        }
+
+        // Calculate total distance
+        const totalDistance = sections.length;
+
+        // Calculate average gradient
+        const averageGradient = totalDistance > 0 ? (cumulativeElevation / totalDistance) : 0;
+
+        // Construct the ClimbProfile object
+        const climbProfile: ClimbProfile = {
+            minElevation,
+            maxElevation,
+            distance: totalDistance,
+            averageGradient: Math.round(averageGradient * 100) / 100, // Round to two decimal places
+            sections: sections.map((kmData, index) => ({
+                start: kmData.distance,
+                end: kmData.distance + 1,
+                gradient: Math.round((kmData.delta / sectionLength) * 100),
+                delta: kmData.delta,
+                altitude: index < sections.length - 1 ? sections[index + 1].maxElevation : previousAltitude
+            }))
+        };
+
+        return climbProfile;
+    }
+
     pickSection(startKm: number = 0, endKm: number = Infinity): Point[] {
         // Convert start and end distances to meters
         const startDistance = startKm * 1000;
@@ -98,77 +173,5 @@ export class GPXDataProcessor {
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
         return R * c;
-    }
-
-    calculateElevationPerKilometer(startKm: number = 0, endKm: number = Infinity, sectionLength: number = 1000): ClimbProfile {
-        // Filter points within the specified range
-        const section = this.pickSection(startKm, endKm);
-
-        // Group points by kilometer segment
-        const groupedByKm = _.groupBy(section, (point: Point) => Math.floor(point.distance / sectionLength));
-
-        // Initialize variables for the climb profile
-        const sections: Section[] = [];
-        let minElevation = Infinity;
-        let maxElevation = -Infinity;
-        let cumulativeElevation = 0;
-        let previousAltitude = 0; // Track the altitude after each kilometer
-
-        // Iterate over the grouped data using for...of and Object.entries
-        for (const [kmSegment, points] of Object.entries(groupedByKm)) {
-            // Convert kmSegment to number
-            const kmSegmentNumber = parseFloat(kmSegment);
-
-            // Calculate min and max elevation for this kilometer segment
-            const segmentMinElevation = _.minBy(points, 'ele')?.ele ?? 0;
-            const segmentMaxElevation = _.maxBy(points, 'ele')?.ele ?? 0;
-
-            // Round elevations
-            const roundedMinElevation = Math.round(segmentMinElevation);
-            const roundedMaxElevation = Math.round(segmentMaxElevation);
-
-            // Calculate the altitude at the end of this segment
-            previousAltitude = roundedMaxElevation;
-
-            // Add the elevation data to the array
-            const newSection = {
-                distance: kmSegmentNumber,
-                minElevation: roundedMinElevation,
-                maxElevation: roundedMaxElevation,
-                delta: roundedMaxElevation - roundedMinElevation
-            };
-
-            sections.push(newSection);
-
-            // Update cumulative elevation
-            cumulativeElevation += roundedMaxElevation - roundedMinElevation;
-
-            // Update overall min and max elevation
-            minElevation = Math.min(minElevation, roundedMinElevation);
-            maxElevation = Math.max(maxElevation, roundedMaxElevation);
-        }
-
-        // Calculate total distance
-        const totalDistance = sections.length;
-
-        // Calculate average gradient
-        const averageGradient = totalDistance > 0 ? (cumulativeElevation / totalDistance) : 0;
-
-        // Construct the ClimbProfile object
-        const climbProfile: ClimbProfile = {
-            minElevation,
-            maxElevation,
-            distance: totalDistance,
-            averageGradient: Math.round(averageGradient * 100) / 100, // Round to two decimal places
-            sections: sections.map((kmData, index) => ({
-                start: kmData.distance,
-                end: kmData.distance + 1,
-                gradient: Math.round((kmData.delta / sectionLength) * 100),
-                delta: kmData.delta,
-                altitude: index < sections.length - 1 ? sections[index + 1].maxElevation : previousAltitude
-            }))
-        };
-
-        return climbProfile;
     }
 }

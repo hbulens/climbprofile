@@ -51,13 +51,19 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile }) => {
             .style('height', '100%');
 
         // Function to determine color based on gradient
-        const getLineColor = (gradient: number) => {
-            if (gradient < 0) return '#808080'; // Gray for negative gradient
-            if (gradient < 4) return '#00FF00'; // Green for gradient < 4
-            if (gradient < 7) return '#FFA500'; // Orange for 4 <= gradient < 7
-            if (gradient < 10) return '#FF0000'; // Red for 7 <= gradient < 10
-            if (gradient < 14) return '#8B0000'; // Dark red for 10 <= gradient < 14
-            return '#000000'; // Black for gradient >= 14
+        const getLineColor = () => {
+            return '#000000'; // Black for the line color
+        };
+
+        const getAreaColor = (gradient: number) => {
+            console.log(gradient);
+            // Using the original color scheme with a subtle gradient effect
+            if (gradient < -2) return 'rgba(128, 128, 128, 0.7)'; // Light gray for negative gradient
+            if (gradient < 4) return 'rgba(0, 255, 0, 0.7)'; // Green for gradient < 4
+            if (gradient < 7) return 'rgba(255, 165, 0, 0.7)'; // Orange for 4 <= gradient < 7
+            if (gradient < 10) return 'rgba(255, 0, 0, 0.7)'; // Red for 7 <= gradient < 10
+            if (gradient < 14) return 'rgba(139, 0, 0, 0.7)'; // Dark red for 10 <= gradient < 14
+            return 'rgba(0, 0, 0, 0.7)'; // Black for gradient >= 14
         };
 
         // Draw areas and lines for each section
@@ -76,7 +82,7 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile }) => {
                 // Draw the area for the current segment
                 svg.append('path')
                     .datum([d, next])
-                    .attr('fill', getLineColor(d.gradient))
+                    .attr('fill', getAreaColor(d.gradient))
                     .attr('stroke', 'none')
                     .attr('d', area);
 
@@ -84,8 +90,8 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile }) => {
                 svg.append('path')
                     .datum([d, next])
                     .attr('fill', 'none')
-                    .attr('stroke', getLineColor(d.gradient))
-                    .attr('stroke-width', 2)
+                    .attr('stroke', getLineColor())
+                    .attr('stroke-width', 3) // Increased line thickness
                     .attr('d', line);
 
                 // Add gradient percentage labels
