@@ -14,9 +14,10 @@ interface ClimbProfile {
 
 interface ClimbProfileProps {
     climbProfile: ClimbProfile;
+    zoomLevel?: number;
 }
 
-const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile }) => {
+const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile, zoomLevel = 1 }) => {
     const svgRef = useRef<SVGSVGElement>(null);
 
     const exportToPng = () => {
@@ -43,16 +44,15 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile }) => {
         img.src = `data:image/svg+xml;base64,${btoa(svgString)}`;
     };
 
-
     useEffect(() => {
         if (!climbProfile) return;
 
         const data = climbProfile.sections;
 
         // Set up dimensions and margins
-        const margin = { top: 20, right: 30, bottom: 60, left: 40 };
-        const width = (svgRef.current?.clientWidth || 800) - margin.left - margin.right;
-        const height = (svgRef.current?.clientHeight || 500) - margin.top - margin.bottom;
+        const margin = { top: 20, right: 40, bottom: 20, left: 30 };
+        const width = ((svgRef.current?.clientWidth || 800) - margin.left - margin.right);
+        const height = ((svgRef.current?.clientHeight || 600) - margin.top - margin.bottom) + (zoomLevel * 10);
 
         const xScale = d3.scaleLinear()
             .domain(d3.extent(data, d => d.start) as [number, number])
@@ -60,7 +60,7 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile }) => {
 
         const yScale = d3.scaleLinear()
             .domain([
-                0, // Start y domain from 0 for the bottom of the chart
+                0,
                 d3.max(data, d => d.altitude) || 0
             ])
             .nice()
@@ -75,13 +75,9 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile }) => {
             .style('width', '100%')
             .style('height', '100%');
 
-        // Function to determine color based on gradient
-        const getLineColor = () => {
-            return '#000000'; // Black for the line color
-        };
+        const getLineColor = () => '#000000'; // Black for the line color
 
         const getAreaColor = (gradient: number) => {
-            // Using the original color scheme with a subtle gradient effect
             if (gradient < -2) return 'rgba(128, 128, 128, 0.7)'; // Light gray for negative gradient
             if (gradient < 4) return 'rgba(0, 255, 0, 0.7)'; // Green for gradient < 4
             if (gradient < 7) return 'rgba(255, 165, 0, 0.7)'; // Orange for 4 <= gradient < 7
@@ -95,12 +91,12 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile }) => {
             if (i < data.length - 1) {
                 const next = data[i + 1];
                 const line = d3.line<Section>()
-                    .x(d => xScale(d.start) + 40)
+                    .x(d => xScale(d.start) + margin.left)
                     .y(d => yScale(d.altitude));
 
                 const area = d3.area<Section>()
-                    .x(d => xScale(d.start) + 40)
-                    .y0(height) // Start from the bottom (x-axis)
+                    .x(d => xScale(d.start) + margin.left)
+                    .y0(height)
                     .y1(d => yScale(d.altitude));
 
                 // Draw the area for the current segment
@@ -115,35 +111,59 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile }) => {
                     .datum([d, next])
                     .attr('fill', 'none')
                     .attr('stroke', getLineColor())
-                    .attr('stroke-width', 3) // Increased line thickness
+                    .attr('stroke-width', 3)
                     .attr('d', line);
 
-                // Add gradient percentage labels
+                // Add gradient percentage labels (in white)
                 svg.append('text')
-                    .attr('x', xScale(d.start) + 30 + (xScale(next.start) - xScale(d.start)) / 2) // Center label between points
-                    .attr('y', yScale(d.altitude) + 15) // Position label just above the line
+                    .attr('x', xScale(d.start) + margin.left - 10 + (xScale(next.start) - xScale(d.start)) / 2)
+                    .attr('y', yScale(d.altitude) + 15)
                     .attr('text-anchor', 'middle')
-                    .attr('fill', '#000000') // Black text color
+                    .attr('fill', '#FFFFFF') // White text color
                     .style('font-size', '12px')
-                    .style('font-weight', 'bold') // Bold text
+                    .style('font-weight', 'bold')
                     .text(`${d.gradient}%`);
             }
         });
+
+        // Add altitude at the beginning of the chart (in white, vertical)
+        svg.append('text')
+            .attr('x', xScale(data[0].start) + margin.left - 25)
+            .attr('y', yScale(data[0].altitude))
+            .attr('text-anchor', 'middle')
+            .attr('fill', '#FFFFFF') // White text color
+            .style('font-size', '12px')
+            .style('font-weight', 'bold')
+            .attr('transform', `rotate(-90, ${xScale(data[0].start) + margin.left - 25}, ${yScale(data[0].altitude)})`) // Rotate text vertically
+            .text(`${data[0].altitude} m`);
+
+        // Add altitude at the end of the chart (in white, vertical)
+        const lastPoint = data[data.length - 1];
+        svg.append('text')
+            .attr('x', xScale(lastPoint.start) + margin.left + 25)
+            .attr('y', yScale(lastPoint.altitude))
+            .attr('text-anchor', 'middle')
+            .attr('fill', '#FFFFFF') // White text color
+            .style('font-size', '12px')
+            .style('font-weight', 'bold')
+            .attr('transform', `rotate(-90, ${xScale(lastPoint.start) + margin.left + 25}, ${yScale(lastPoint.altitude)})`) // Rotate text vertically
+            .text(`${lastPoint.altitude} m`);
 
         // Add X and Y axes
         svg.append('g')
             .attr('transform', `translate(${margin.left},${height + margin.top})`)
             .call(d3.axisBottom(xScale)
-                .ticks(d3.max(data, d => d.start) || 0, 'd') // Display ticks every km
+                .ticks(d3.max(data, d => d.start) || 0, 'd')
                 .tickFormat(d => `${d} km`));
 
+        // Y-axis on the right side
         svg.append('g')
-            .attr('transform', `translate(${margin.left},${margin.top})`)
-            .call(d3.axisLeft(yScale)
+            .attr('transform', `translate(${width + margin.left},${margin.top})`)
+            .call(d3.axisRight(yScale)
                 .ticks(5)
                 .tickFormat(d => `${d} m`));
 
-    }, [climbProfile]);
+    }, [climbProfile, zoomLevel]);
 
     return (
         <div>

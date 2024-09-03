@@ -1,40 +1,9 @@
 import GPXParser from 'gpxparser';
 import _ from 'lodash';
+import Section from './section';
+import Point from './point';
+import { ClimbProfile } from './climbprofile';
 
-export interface Point {
-    lat: number;
-    lon: number;
-    ele: number;
-    distance: number;
-}
-
-export interface Gradient {
-    distance: number; // Kilometers
-    gradient: number; // Percentage
-}
-
-export interface GradientSection {
-    start: number;
-    end: number;
-    gradient: number;
-    delta: number;
-    altitude: number;
-}
-
-export interface ClimbProfile {
-    minElevation: number; // Minimum elevation in meters
-    maxElevation: number; // Maximum elevation in meters
-    distance: number;
-    averageGradient: number;
-    sections: GradientSection[]
-}
-
-export interface Section {
-    distance: number; // Kilometers
-    delta: number;
-    minElevation: number; // Minimum elevation in meters
-    maxElevation: number; // Maximum elevation in meters
-}
 
 export class GPXDataProcessor {
     private points: Point[] = [];
@@ -79,9 +48,9 @@ export class GPXDataProcessor {
             // Add the elevation data to the array
             const newSection = {
                 distance: kmSegmentNumber * (sectionLength / 1000),
-                minElevation: roundedMinElevation,
-                maxElevation: roundedMaxElevation,
-                delta: endElevation - startElevation
+                minElevation: Math.round(startElevation),
+                maxElevation: Math.round(endElevation),
+                delta: endElevation - startElevation,
             };
 
             sections.push(newSection);
