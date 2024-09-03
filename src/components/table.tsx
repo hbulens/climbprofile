@@ -21,7 +21,7 @@ const ClimbProfileTable: React.FC<ClimbProfileTableProps> = ({ climbProfile }) =
                     {climbProfile.sections.map((section, index) => (
                         <tr key={index} className="hover:bg-gray-50">
                             <td className="py-2 px-4 border-b text-sm text-gray-700">{section.start.toFixed(2)}</td>
-                            <td className="py-2 px-4 border-b text-sm text-gray-700">{section.altitude.toFixed(2)}</td>
+                            <td className="py-2 px-4 border-b text-sm text-gray-700">{section.highest.toFixed(2)}</td>
                             <td className="py-2 px-4 border-b text-sm text-gray-700">{section.gradient.toFixed(2)}</td>
                             <td className="py-2 px-4 border-b text-sm text-gray-700">{section.delta.toFixed(2)}</td>
                         </tr>

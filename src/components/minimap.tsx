@@ -9,8 +9,8 @@ interface Section {
 }
 
 interface ClimbProfile {
-    minElevation: number;
-    maxElevation: number;
+    lowest: number;
+    highest: number;
     distance: number;
     averageGradient: number;
     sections: Section[];
@@ -36,16 +36,16 @@ const Minimap: React.FC<MinimapProps> = ({ climbProfile, setStartKm, setEndKm })
         const data = climbProfile.sections;
 
         // Set up dimensions and margins
-        const margin = { top: 10, right: 10, bottom: 30, left: 40 }; // Added left margin
+        const margin = { top: 10, right: 0, bottom: 0, left: 0 }; // Added left margin
         const width = (svgRef.current?.clientWidth || 800) - margin.left - margin.right;
-        const height = 200 - margin.top - margin.bottom; // Set height to 200px
+        const height = 50 - margin.top - margin.bottom; // Set height to 200px
 
         const xScale = d3.scaleLinear()
             .domain([startKm, endKm])
             .range([0, width]);
 
         const yScale = d3.scaleLinear()
-            .domain([0, d3.max(data, d => d.altitude) || 0])
+            .domain([0, d3.max(data, d => d.highest) || 0])
             .range([height, 0]);
 
         const svg = d3.select(svgRef.current);
@@ -60,7 +60,7 @@ const Minimap: React.FC<MinimapProps> = ({ climbProfile, setStartKm, setEndKm })
         // Draw the elevation line
         const line = d3.line<Section>()
             .x(d => xScale(d.start) + margin.left) // Apply margin
-            .y(d => yScale(d.altitude));
+            .y(d => yScale(d.highest));
 
         svg.append('path')
             .datum(data)

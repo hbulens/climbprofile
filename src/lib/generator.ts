@@ -5,128 +5,112 @@ import Point from './point';
 import { ClimbProfile } from './climbprofile';
 
 
-export class GPXDataProcessor {
-    private points: Point[] = [];
+export class RouteCalculator {
+    private gpxRoute: Point[] = [];
 
     constructor(gpxData: string) {
         this.parse(gpxData);
     }
 
-    calculateElevation(startKm: number = 0, endKm: number = Infinity, sectionLength: number = 500): ClimbProfile {
-        // Filter points within the specified range
-        const section = this.pickSection(startKm, endKm);
-
-        // Group points by kilometer segment
-        const groupedByInterval = _.groupBy(section, (point: Point) => Math.floor(point.distance / sectionLength));
+    generateProfile(startKm: number = 0, endKm: number = Infinity, sectionLength: number = 1000): ClimbProfile {
+        const subroute = this.select(startKm, endKm);
+        const subroutePerInterval = _.groupBy(subroute, (point: Point) => Math.floor(point.distance / sectionLength));
 
         // Initialize variables for the climb profile
         const sections: Section[] = [];
-        let minElevation = Infinity;
-        let maxElevation = -Infinity;
-        let cumulativeElevation = 0;
-        let previousAltitude = 0; // Track the altitude after each kilometer
+        let cumulativeClimbing = 0;
+        let cumulativeDownhill = 0;
 
-        // Iterate over the grouped data using for...of and Object.entries
-        for (const [kmSegment, points] of Object.entries(groupedByInterval)) {
-            // Convert kmSegment to number
-            const kmSegmentNumber = parseFloat(kmSegment);
+        for (const [segment, points] of Object.entries(subroutePerInterval)) {
+            const segmentNumber = parseFloat(segment);
+            const waypoints = (points as Array<Point>);
 
-            // Calculate min and max elevation for this kilometer segment
-            const segmentMinElevation = _.minBy(points, 'ele')?.ele ?? 0;
-            const segmentMaxElevation = _.maxBy(points, 'ele')?.ele ?? 0;
+            let climbing = 0;
+            let downhill = 0;
 
-            // Round elevations
-            const roundedMinElevation = Math.round(segmentMinElevation);
-            const roundedMaxElevation = Math.round(segmentMaxElevation);
+            waypoints.forEach((pt, index) => {
+                if (index > 0) {
+                    const prev: Point = waypoints[index - 1];
+                    const elevationChange = pt.elevation - prev.elevation;
 
-            // Calculate the altitude at the end of this segment
-            previousAltitude = roundedMaxElevation;
+                    if (elevationChange > 0)
+                        climbing += elevationChange;
+                    else
+                        downhill += Math.abs(elevationChange);
 
-            const startElevation = _(points).first().ele;
-            const endElevation = _(points).last().ele;
+                }
+            });
 
-            // Add the elevation data to the array
-            const newSection = {
-                distance: kmSegmentNumber * (sectionLength / 1000),
-                minElevation: Math.round(startElevation),
-                maxElevation: Math.round(endElevation),
-                delta: endElevation - startElevation,
-            };
+            const segmentGradient = (climbing - downhill) / sectionLength * 100;
 
-            sections.push(newSection);
+            // Update overall cumulative elevation gain/loss
+            cumulativeClimbing += climbing;
+            cumulativeDownhill += downhill;
 
-            // Update cumulative elevation
-            cumulativeElevation += roundedMaxElevation - roundedMinElevation;
-
-            // Update overall min and max elevation
-            minElevation = Math.min(minElevation, roundedMinElevation);
-            maxElevation = Math.max(maxElevation, roundedMaxElevation);
+            sections.push({
+                start: segmentNumber,
+                end: segmentNumber + segmentNumber * (sectionLength / 1000),
+                distance: segmentNumber * (sectionLength / 1000), // Convert to km
+                delta: climbing - downhill,
+                lowest: _.minBy(waypoints, x => x.elevation)?.elevation ?? 0,
+                highest: _.maxBy(waypoints, x => x.elevation)?.elevation ?? 0,
+                gradient: Math.round(segmentGradient),
+            });
         }
 
         // Calculate total distance
-        const totalDistance = sections.length;
-
-        // Calculate average gradient
-        const averageGradient = totalDistance > 0 ? (cumulativeElevation / totalDistance) : 0;
+        const totalDistance = sections.length * (sectionLength / 1000);
 
         // Construct the ClimbProfile object
         const climbProfile: ClimbProfile = {
-            minElevation,
-            maxElevation,
+            lowest: _.minBy(sections, x => x.lowest)?.lowest ?? 0,
+            highest: _.maxBy(sections, x => x.highest)?.highest ?? 0,
             distance: totalDistance,
-            averageGradient: Math.round(averageGradient * 100) / 100, // Round to two decimal places
-            sections: sections.map((kmData, index) => ({
-                start: kmData.distance,
-                end: kmData.distance + 1,
-                gradient: Math.round((kmData.delta / sectionLength) * 100),
-                delta: kmData.delta,
-                altitude: index < sections.length - 1 ? sections[index + 1].maxElevation : previousAltitude
-            }))
+            averageGradient: Math.round((cumulativeClimbing / totalDistance) * 100) / 100,
+            totalClimbing: cumulativeClimbing,
+            totalDescending: cumulativeDownhill,
+            sections: sections
         };
 
         console.log(climbProfile);
         return climbProfile;
     }
 
-    pickSection(startKm: number = 0, endKm: number = Infinity): Point[] {
+    private select(startKm: number = 0, endKm: number = Infinity): Point[] {
         // Convert start and end distances to meters
         const startDistance = startKm * 1000;
         const endDistance = endKm * 1000;
 
         // Filter points within the specified range
-        const section = this.points.filter(point => point.distance >= startDistance && point.distance <= endDistance);
+        const sections = this.gpxRoute.filter(point => point.distance >= startDistance && point.distance <= endDistance);
 
-        if (section.length > 0) {
-            // Calculate the offset to make the first point's distance 0
-            const distanceOffset = section[0].distance;
-
-            // Adjust distances so that the first point in the section has a distance of 0
-            section.forEach(point => { point.distance -= distanceOffset; });
+        // Reset starting point
+        if (sections.length > 0) {
+            const distanceOffset = sections[0].distance;
+            return sections.map(x => ({ ...x, distance: x.distance - distanceOffset }));
         }
 
-        return section;
+        return sections;
     }
 
     private parse(gpxData: string): void {
         const gpxParser = new GPXParser();
         gpxParser.parse(gpxData);
+        const track = gpxParser.tracks[0];
 
         let cumulativeDistance = 0;
 
-        const track = gpxParser.tracks[0];
-        const segment = track.points;
-
-        segment.forEach((pt, index) => {
+        this.gpxRoute = track.points.map((pt, index) => {
             const lat = pt.lat;
             const lon = pt.lon;
-            const ele = pt.ele;
+            const elevation = pt.ele;
 
             if (index > 0) {
-                const prev = segment[index - 1];
+                const prev = track.points[index - 1];
                 cumulativeDistance += this.calculateDistance(prev.lat, prev.lon, lat, lon);
             }
 
-            this.points.push({ lat, lon, ele, distance: cumulativeDistance });
+            return { lat, lon, elevation, distance: cumulativeDistance };
         });
     }
 

@@ -1,6 +1,9 @@
 export default interface Section {
-    distance: number; // Kilometers
+    start: number;
+    end: number;
+    distance: number;
     delta: number;
-    minElevation: number; // Minimum elevation in meters
-    maxElevation: number; // Maximum elevation in meters
+    lowest: number;
+    highest: number;
+    gradient: number;
 }

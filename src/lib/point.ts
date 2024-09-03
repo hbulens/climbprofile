@@ -1,8 +1,6 @@
-
-
 export default interface Point {
     lat: number;
     lon: number;
-    ele: number;
+    elevation: number;
     distance: number;
 }

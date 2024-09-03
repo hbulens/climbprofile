@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GPXDataProcessor } from './lib/generator';
+import { RouteCalculator } from './lib/generator';
 import ClimbProfileChart from './components/chart';
 import Minimap from './components/minimap';
 import { ClimbProfile } from './lib/climbprofile';
@@ -30,9 +30,9 @@ const App: React.FC = () => {
   };
 
   const calculateProfile = (gpxData: string) => {
-    const processor = new GPXDataProcessor(gpxData);
+    const processor = new RouteCalculator(gpxData);
 
-    const profile = processor.calculateElevation(startKm, endKm + 1, interval);
+    const profile = processor.generateProfile(startKm, endKm + 1, interval);
     setClimbProfile(profile);
 
     return profile;
@@ -96,8 +96,9 @@ const App: React.FC = () => {
           <div className="mt-8">
             {climbProfile && (
               <>
-                <ClimbProfileChart climbProfile={climbProfile} zoomLevel={zoomLevel} />
                 <Minimap climbProfile={originalClimbProfile!} setStartKm={setStartKm} setEndKm={setEndKm} />
+
+                <ClimbProfileChart climbProfile={climbProfile} zoomLevel={zoomLevel} />
                 <RouteVisualizer route={gpx} startKm={startKm} endKm={endKm} />
                 <ClimbProfileTable climbProfile={climbProfile} />
               </>
