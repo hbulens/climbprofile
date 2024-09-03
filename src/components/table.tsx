@@ -8,7 +8,7 @@ interface ClimbProfileTableProps {
 const ClimbProfileTable: React.FC<ClimbProfileTableProps> = ({ climbProfile }) => {
     return (
         <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-lg">
+            <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-8">
                 <thead>
                     <tr>
                         <th className="py-2 px-4 border-b bg-gray-100 text-left text-sm font-semibold text-gray-700">Start (km)</th>

@@ -1,70 +1,75 @@
-import 'leaflet/dist/leaflet.css'
-import { MapContainer, TileLayer, Polyline, Marker } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css';
+import { MapContainer, TileLayer, Polyline } from 'react-leaflet';
 import gpxParser from 'gpxparser';
 import type { LatLngBoundsExpression, LatLngExpression } from 'leaflet';
 import { useState, useEffect } from 'react';
 import L from 'leaflet';
 
-const RouteVisualizer = ({ route }: { route: string }) => {
+interface RouteVisualizerProps {
+    route: string;
+    startKm?: number;
+    endKm?: number;
+}
 
-    const [coordinates, setCoordinates] = useState<LatLngExpression[]>([]);
-    const [track, setTrack] = useState<any>(null);
-    const [center, setCenter] = useState<LatLngExpression>();
+const RouteVisualizer: React.FC<RouteVisualizerProps> = ({ route, startKm = 0, endKm }) => {
+    const [filteredCoordinates, setFilteredCoordinates] = useState<LatLngExpression[]>([]);
     const [bounds, setBounds] = useState<LatLngBoundsExpression>();
-    const [currentLocation, setCurrentLocation] = useState<LatLngExpression>();
 
     useEffect(() => {
-        const getRoute = async () => {
+        const getRoute = () => {
             const gpx = new gpxParser();
             gpx.parse(route);
 
-            const positions: LatLngExpression[] = gpx?.tracks[0].points?.map((p: any) => [p.lat, p.lon]);
-            setCoordinates(positions);
+            const points = gpx.tracks[0].points.map((p: any) => ({
+                lat: p.lat,
+                lon: p.lon,
+                ele: p.ele,
+                dist: p.cumDist // Assume the GPX parser calculates cumulative distance
+            }));
 
-            setCenter(positions[0])
-            setTrack(gpx);
+            // If `cumDist` is not available, calculate cumulative distance
+            points.forEach((point: any, index: number) => {
+                if (index === 0) {
+                    point.cumDist = 0;
+                } else {
+                    const prevPoint = points[index - 1];
+                    const distance = L.latLng(point.lat, point.lon).distanceTo(L.latLng(prevPoint.lat, prevPoint.lon)) / 1000;
+                    point.cumDist = (prevPoint as any).cumDist + distance;
+                }
+            });
 
-            const avgLat = positions.reduce((sum, pos: LatLngExpression) => sum + (pos as any)[0], 0) / positions.length;
-            const avgLon = positions.reduce((sum, pos: LatLngExpression) => sum + (pos as any)[1], 0) / positions.length;
+            // Set the default endKm to the total distance if not provided
+            const totalDistance = (points[points.length - 1] as any).cumDist;
+            const endDistance = endKm ?? totalDistance;
 
-            setCenter([avgLat, avgLon])
+            // Filter points within the selected range
+            const filtered = points.filter((p: any) => p.cumDist >= startKm && p.cumDist <= endDistance);
+            const filteredCoordinates = filtered.map((p: any) => [p.lat, p.lon] as LatLngExpression);
+            setFilteredCoordinates(filteredCoordinates);
 
-            const minLat = Math.min(...positions.map((pos) => (pos as any)[0]));
-            const maxLat = Math.max(...positions.map((pos) => (pos as any)[0]));
-            const minLon = Math.min(...positions.map((pos) => (pos as any)[1]));
-            const maxLon = Math.max(...positions.map((pos) => (pos as any)[1]));
+            // Calculate bounds for the filtered coordinates
+            const minLat = Math.min(...filteredCoordinates.map((pos) => (pos as any)[0]));
+            const maxLat = Math.max(...filteredCoordinates.map((pos) => (pos as any)[0]));
+            const minLon = Math.min(...filteredCoordinates.map((pos) => (pos as any)[1]));
+            const maxLon = Math.max(...filteredCoordinates.map((pos) => (pos as any)[1]));
             setBounds([[minLat, minLon], [maxLat, maxLon]]);
-        }
+        };
 
         getRoute();
-    }, []);
+    }, [route, startKm, endKm]);
 
-    if (!center)
-        return <></>;
-
-    const svgIcon = L.divIcon({
-        html: `<svg xmlns="http://www.w3.org/2000/svg" fill="orange" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-        </svg>
-        `,
-        className: "svg-icon",
-        iconSize: [24, 40],
-    });
+    if (!filteredCoordinates.length) return null;
 
     return (
-        <div className="mt-8 mt-8">
-            <div style={{ height: "300px", width: "100%" }}>
-                <MapContainer style={{ width: "100%", height: "100%" }} center={center} bounds={bounds} scrollWheelZoom={false}>
+        <div className="mt-8">
+            <div style={{ height: '300px', width: '100%' }}>
+                <MapContainer style={{ width: '100%', height: '100%' }} bounds={bounds}>
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    <Polyline pathOptions={{ fillColor: 'red', color: '#e86100' }} positions={coordinates} />
-
-                    {currentLocation && (<Marker position={currentLocation!} icon={svgIcon} />)}
-
+                    <Polyline pathOptions={{ fillColor: 'red', color: '#e86100' }} positions={filteredCoordinates} />
                 </MapContainer>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default RouteVisualizer
+export default RouteVisualizer;
