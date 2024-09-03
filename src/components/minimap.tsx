@@ -1,20 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
-
-interface Section {
-    start: number;
-    delta: number;
-    altitude: number;
-    gradient: number;
-}
-
-interface ClimbProfile {
-    lowest: number;
-    highest: number;
-    distance: number;
-    averageGradient: number;
-    sections: Section[];
-}
+import { ClimbProfile } from '../lib/climbprofile';
+import Section from '../lib/section';
 
 interface MinimapProps {
     climbProfile: ClimbProfile;

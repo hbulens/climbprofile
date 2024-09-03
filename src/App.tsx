@@ -44,7 +44,10 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (gpx) {
-      setOriginalClimbProfile(calculateProfile(gpx));
+      const profile = calculateProfile(gpx);
+      setOriginalClimbProfile(profile);
+      setStartKm(0);
+      setEndKm(profile.distance);
     }
   }, [gpx]);
 

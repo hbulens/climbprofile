@@ -4,7 +4,6 @@ import Section from './section';
 import Point from './point';
 import { ClimbProfile } from './climbprofile';
 
-
 export class RouteCalculator {
     private gpxRoute: Point[] = [];
 
@@ -23,7 +22,7 @@ export class RouteCalculator {
 
         for (const [segment, points] of Object.entries(subroutePerInterval)) {
             const segmentNumber = parseFloat(segment);
-            const waypoints = (points as Array<Point>);
+            const waypoints = points as Array<Point>;
 
             let climbing = 0;
             let downhill = 0;
@@ -33,11 +32,11 @@ export class RouteCalculator {
                     const prev: Point = waypoints[index - 1];
                     const elevationChange = pt.elevation - prev.elevation;
 
-                    if (elevationChange > 0)
+                    if (elevationChange > 0) {
                         climbing += elevationChange;
-                    else
+                    } else {
                         downhill += Math.abs(elevationChange);
-
+                    }
                 }
             });
 
@@ -47,10 +46,13 @@ export class RouteCalculator {
             cumulativeClimbing += climbing;
             cumulativeDownhill += downhill;
 
+            const startDistance = segmentNumber * sectionLength / 1000;  // Start distance in km
+            const endDistance = (segmentNumber + 1) * sectionLength / 1000; // End distance in km
+
             sections.push({
-                start: segmentNumber,
-                end: segmentNumber + segmentNumber * (sectionLength / 1000),
-                distance: segmentNumber * (sectionLength / 1000), // Convert to km
+                start: startDistance,
+                end: endDistance,
+                distance: endDistance, // End distance here is the actual distance covered by the section in km
                 delta: climbing - downhill,
                 lowest: _.minBy(waypoints, x => x.elevation)?.elevation ?? 0,
                 highest: _.maxBy(waypoints, x => x.elevation)?.elevation ?? 0,
@@ -58,8 +60,8 @@ export class RouteCalculator {
             });
         }
 
-        // Calculate total distance
-        const totalDistance = sections.length * (sectionLength / 1000);
+        // Calculate total distance based on the actual section length
+        const totalDistance = sections.reduce((acc, section) => acc + (section.end - section.start), 0);
 
         // Construct the ClimbProfile object
         const climbProfile: ClimbProfile = {
@@ -69,7 +71,7 @@ export class RouteCalculator {
             averageGradient: Math.round((cumulativeClimbing / totalDistance) * 100) / 100,
             totalClimbing: cumulativeClimbing,
             totalDescending: cumulativeDownhill,
-            sections: sections
+            sections: sections,
         };
 
         console.log(climbProfile);
