@@ -50,9 +50,9 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center">
-      <nav className="w-full bg-blue-800 text-white p-4 shadow-md">
+      <nav className="w-full bg-primary text-white p-4 shadow-md">
         <div className="max-w-8xl mx-auto flex justify-between items-center">
-          <div className="text-xl font-semibold">Climb Profile Generator</div>
+          <img src="logo.png" alt="Logo" style={{ height: 50 }} />
         </div>
       </nav>
 
