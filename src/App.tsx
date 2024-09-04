@@ -48,6 +48,7 @@ const App: React.FC = () => {
       setOriginalClimbProfile(profile);
       setStartKm(0);
       setEndKm(profile.distance);
+      setZoomLevel(1);
     }
   }, [gpx]);
 
