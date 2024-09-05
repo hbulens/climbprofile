@@ -25,7 +25,8 @@ const Minimap: React.FC<MinimapProps> = ({ climbProfile, setStartKm, setEndKm })
         // Set up dimensions and margins
         const margin = { top: 10, right: 0, bottom: 0, left: 0 }; // Added left margin
         const width = (svgRef.current?.clientWidth || 800) - margin.left - margin.right;
-        const height = 50 - margin.top - margin.bottom; // Set height to 200px
+        const lineHeight = 50 - margin.top - margin.bottom; // Set height to 200px
+        const height = lineHeight + 10;
 
         const xScale = d3.scaleLinear()
             .domain([startKm, endKm])
@@ -33,21 +34,20 @@ const Minimap: React.FC<MinimapProps> = ({ climbProfile, setStartKm, setEndKm })
 
         const yScale = d3.scaleLinear()
             .domain([0, d3.max(data, d => d.highest) || 0])
-            .range([height, 0]);
+            .range([lineHeight, 0]);
 
         const svg = d3.select(svgRef.current);
         svg.selectAll('*').remove(); // Clear previous content
 
         svg
-            .attr('viewBox', `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+            .attr('viewBox', `0 0 ${width + margin.left + margin.right} ${lineHeight + margin.top + margin.bottom}`)
             .attr('preserveAspectRatio', 'xMidYMid meet')
-            .style('width', '95%') // Fixed width
-            .style('height', '150px'); // Fixed height
+            .style('width', '95%') // Fixed width            
 
         // Draw the elevation line
         const line = d3.line<Section>()
             .x(d => xScale(d.start) + margin.left) // Apply margin
-            .y(d => yScale(d.highest));
+            .y(d => yScale(d.highest) + 5);
 
         svg.append('path')
             .datum(data)
@@ -103,9 +103,7 @@ const Minimap: React.FC<MinimapProps> = ({ climbProfile, setStartKm, setEndKm })
     }, [climbProfile, selectedStartKm, selectedEndKm, setStartKm, setEndKm]);
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-            <svg ref={svgRef}></svg>
-        </div>
+        <svg ref={svgRef}></svg>
     );
 };
 

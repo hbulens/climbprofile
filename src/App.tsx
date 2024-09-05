@@ -135,9 +135,17 @@ const App: React.FC = () => {
             {climbProfile && (
               <>
                 <ClimbProfileChart climbProfile={climbProfile} zoomLevel={zoomLevel} svgRef={svgRef} />
-                <Minimap climbProfile={originalClimbProfile!} setStartKm={setStartKm} setEndKm={setEndKm} />
-                <RouteVisualizer route={gpx} startKm={startKm} endKm={endKm} />
-                <RideSummary climbProfile={climbProfile} />
+                <div className="">
+                  <Minimap climbProfile={originalClimbProfile!} setStartKm={setStartKm} setEndKm={setEndKm} />
+                </div>
+                <div className="flex space-x-4 mt-4" style={{ height: '300px' }}>
+                  <div className="flex-1">
+                    <RouteVisualizer route={gpx} startKm={startKm} endKm={endKm} />
+                  </div>
+                  <div className="flex-none w-80">
+                    <RideSummary climbProfile={climbProfile} />
+                  </div>
+                </div>
                 <ClimbProfileTable climbProfile={climbProfile} />
               </>
             )}

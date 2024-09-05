@@ -6,7 +6,7 @@ interface ClimbProfileTableProps {
 }
 
 const ClimbProfileTable: React.FC<ClimbProfileTableProps> = ({ climbProfile }) => {
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(true);
 
     const toggleCollapse = () => {
         setIsCollapsed(!isCollapsed);
@@ -15,7 +15,7 @@ const ClimbProfileTable: React.FC<ClimbProfileTableProps> = ({ climbProfile }) =
     return (
         <div className="overflow-x-auto mt-4">
             {/* Toggle button */}
-            <button onClick={toggleCollapse} className="py-2 px-4 bg-blue-500 text-white rounded-lg shadow-md focus:outline-none">
+            <button onClick={toggleCollapse} className="py-2 px-4 bg-orange-500 text-white rounded-lg shadow-md focus:outline-none">
                 {isCollapsed ? 'Show table' : 'Hide table'}
             </button>
 
