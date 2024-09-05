@@ -85,7 +85,7 @@ const App: React.FC = () => {
       </nav>
 
       {/* Main Content */}
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-8xl">
+      <div className="bg-white p-8 mt-2 rounded-lg shadow-lg w-full">
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700">Upload GPX File</label>
