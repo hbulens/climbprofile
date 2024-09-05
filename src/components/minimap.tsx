@@ -47,7 +47,7 @@ const Minimap: React.FC<MinimapProps> = ({ climbProfile, setStartKm, setEndKm })
         // Draw the elevation line
         const line = d3.line<Section>()
             .x(d => xScale(d.start) + margin.left) // Apply margin
-            .y(d => yScale(d.maxElevation) + 5);
+            .y(d => yScale(d.endElevation));
 
         svg.append('path')
             .datum(data)
