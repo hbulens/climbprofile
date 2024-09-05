@@ -5,6 +5,8 @@ import Minimap from './components/minimap';
 import { ClimbProfile } from './lib/climbprofile';
 import RouteVisualizer from './components/route';
 import ClimbProfileTable from './components/table';
+import _ from 'lodash';
+import RideSummary from './components/summary';
 
 const App: React.FC = () => {
   const [startKm, setStartKm] = useState<number>(0);
@@ -32,7 +34,7 @@ const App: React.FC = () => {
 
   const calculateProfile = (gpxData: string) => {
     const processor = new RouteCalculator(gpxData);
-    const profile = processor.generateProfile(startKm, endKm + 1, interval);
+    const profile = processor.generateProfile(startKm, endKm, interval);
     setClimbProfile(profile);
     return profile;
   };
@@ -73,6 +75,7 @@ const App: React.FC = () => {
       a.href = canvas.toDataURL('image/png');
       a.click();
     };
+
     img.src = `data:image/svg+xml;base64,${btoa(svgString)}`;
   };
 
@@ -128,13 +131,13 @@ const App: React.FC = () => {
             </div>
           </div>
 
-
           <div className="mt-8">
             {climbProfile && (
               <>
                 <ClimbProfileChart climbProfile={climbProfile} zoomLevel={zoomLevel} svgRef={svgRef} />
                 <Minimap climbProfile={originalClimbProfile!} setStartKm={setStartKm} setEndKm={setEndKm} />
                 <RouteVisualizer route={gpx} startKm={startKm} endKm={endKm} />
+                <RideSummary climbProfile={climbProfile} />
                 <ClimbProfileTable climbProfile={climbProfile} />
               </>
             )}

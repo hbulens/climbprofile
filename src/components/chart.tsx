@@ -24,12 +24,11 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile, zoomLeve
     useEffect(() => {
         if (!climbProfile) return;
 
-        const data = climbProfile.sections;
-
         // Set up dimensions and margins
         const margin = { top: 5, right: 60, bottom: 40, left: 50 }; // Increased left margin for padding
         const width = (svgRef.current?.clientWidth || 800) - margin.left - margin.right;
 
+        const data = climbProfile.sections;
         const xScale = createXScale(data, width);
         const yScale = createYScale(data, height);
 
@@ -54,7 +53,7 @@ const createXScale = (data: Section[], width: number) => {
 
 // Helper method to create Y scale
 const createYScale = (data: Section[], height: number) => {
-    const yPadding = 10; // Additional padding on the Y-axis
+    const yPadding = 80; // Additional padding on the Y-axis
     return d3.scaleLinear()
         .domain([
             (d3.min(data, d => d.lowest) || 0) - yPadding,
@@ -160,15 +159,19 @@ const drawAltitudes = (
 
     // Add altitude at the end of the chart (inside the chart area)
     const lastPoint = data[data.length - 1];
+    const lastPointXPos = xScale(lastPoint.start) + margin.left;
+    const lastPointYPos = yScale(lastPoint.highest);
+
+    // Adjust position to avoid overlap with the line chart
     svg.append('text')
-        .attr('x', xScale(lastPoint.start) + margin.left - 10)
-        .attr('y', yScale(lastPoint.highest) - 10)
+        .attr('x', lastPointXPos - 10) // Adding horizontal buffer
+        .attr('y', lastPointYPos - 15) // Adding vertical buffer
         .attr('text-anchor', 'end')
         .attr('fill', 'black') // Black text color
         .style('font-size', '12px')
         .style('font-weight', 'bold')
-        .attr('transform', `rotate(-90, ${xScale(lastPoint.start) + margin.left - 25}, ${yScale(lastPoint.highest)})`) // Rotate text vertically
-        .text(`${Math.round(lastPoint.highest)} m`);
+        .attr('transform', `rotate(-90, ${lastPointXPos - 30 - 0}, ${lastPointYPos - 30})`) // Rotate text vertically
+        .text(`${Math.round(lastPoint.highest)}m`);
 };
 
 // Helper method to draw X and Y axes
@@ -189,14 +192,19 @@ const drawAxes = (
         .attr('transform', `translate(${margin.left},${height + margin.top})`)
         .call(d3.axisBottom(xScale)
             .tickValues(xTickValues)
-            .tickFormat(d => `${d}`)); // Label ticks with "km"
+            .tickFormat(d => `${d}`))
+        .selectAll('text')
+        .style('font-weight', 'bold')
+        .style('font-size', '12px');
 
     // Add Y-axis on the right side with padding
     svg.append('g')
         .attr('transform', `translate(${width + margin.left},${margin.top})`)
         .call(d3.axisRight(yScale)
             .ticks(5)
-            .tickFormat(d => `${d}`)); // Label ticks with "m"
+            .tickFormat(d => `${d}`))
+        .style('font-weight', 'bold')
+        .style('font-size', '12px');
 };
 
 

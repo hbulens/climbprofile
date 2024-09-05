@@ -6,4 +6,5 @@ export default interface Section {
     lowest: number;
     highest: number;
     gradient: number;
+    coordinate: string;
 }
