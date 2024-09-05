@@ -85,7 +85,7 @@ const App: React.FC = () => {
       </nav>
 
       {/* Main Content */}
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-8xl mt-10">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-8xl">
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700">Upload GPX File</label>
@@ -97,34 +97,37 @@ const App: React.FC = () => {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Interval (meters)</label>
-            <select
-              value={interval}
-              onChange={(e) => setInterval(parseInt(e.target.value))}
-              className="mt-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
-            >
-              <option value={100}>100m</option>
-              <option value={200}>200m</option>
-              <option value={500}>500m</option>
-              <option value={1000}>1000m</option>
-            </select>
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="flex items-center space-x-4">
+              <label className="block text-sm font-medium text-gray-700">Interval (meters)</label>
+              <select
+                value={interval}
+                onChange={(e) => setInterval(parseInt(e.target.value))}
+                className="block w-24 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
+              >
+                <option value={100}>100m</option>
+                <option value={200}>200m</option>
+                <option value={500}>500m</option>
+                <option value={1000}>1000m</option>
+              </select>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <button onClick={() => setZoomLevel(zoomLevel > 0 ? -1 : zoomLevel - 1)} className="p-2 bg-green-500 text-white rounded hover:bg-green-600">
+                -
+              </button>
+              <button onClick={() => setZoomLevel(zoomLevel < 0 ? 1 : zoomLevel + 1)} className="p-2 bg-red-500 text-white rounded hover:bg-red-600">
+                +
+              </button>
+              <button onClick={() => { }} className="p-2 bg-gray-500 text-white rounded hover:bg-red-600">
+                Snap end to summit
+              </button>
+              <button onClick={() => exportToPng()} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600">
+                Export
+              </button>
+            </div>
           </div>
 
-          <div className="flex justify-center mb-4">
-            <button onClick={() => setZoomLevel(zoomLevel > 0 ? -1 : zoomLevel - 1)} className="p-2 bg-green-500 text-white rounded mx-2 hover:bg-green-600">
-              -
-            </button>
-            <button onClick={() => setZoomLevel(zoomLevel < 0 ? 1 : zoomLevel + 1)} className="p-2 bg-red-500 text-white rounded mx-2 hover:bg-red-600">
-              +
-            </button>
-            <button onClick={() => { }} className="p-2 bg-gray-500 text-white rounded mx-2 hover:bg-red-600">
-              Snap end to summit
-            </button>
-            <button onClick={() => exportToPng()} className="p-2 bg-orange-500 text-white rounded mx-2 hover:bg-red-600">
-              Export
-            </button>
-          </div>
 
           <div className="mt-8">
             {climbProfile && (
