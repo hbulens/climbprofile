@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { RouteCalculator } from './lib/generator';
 import ClimbProfileChart from './components/chart';
 import Minimap from './components/minimap';
@@ -9,12 +9,13 @@ import ClimbProfileTable from './components/table';
 const App: React.FC = () => {
   const [startKm, setStartKm] = useState<number>(0);
   const [endKm, setEndKm] = useState<number>(Infinity);
-
   const [originalClimbProfile, setOriginalClimbProfile] = useState<ClimbProfile>();
   const [climbProfile, setClimbProfile] = useState<ClimbProfile>();
   const [gpx, setGpx] = useState<string>("");
   const [interval, setInterval] = useState<number>(1000);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
+
+  const svgRef = useRef<SVGSVGElement>(null); // Create svgRef for ClimbProfileChart
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -31,10 +32,8 @@ const App: React.FC = () => {
 
   const calculateProfile = (gpxData: string) => {
     const processor = new RouteCalculator(gpxData);
-
     const profile = processor.generateProfile(startKm, endKm + 1, interval);
     setClimbProfile(profile);
-
     return profile;
   };
 
@@ -52,6 +51,31 @@ const App: React.FC = () => {
     }
   }, [gpx]);
 
+  // Function to export SVG to PNG
+  const exportToPng = () => {
+    const svg = svgRef.current;
+    if (!svg) return;
+
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svg);
+
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = svg.clientWidth;
+      canvas.height = svg.clientHeight;
+      context?.drawImage(img, 0, 0);
+
+      const a = document.createElement('a');
+      a.download = 'climb-profile.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    };
+    img.src = `data:image/svg+xml;base64,${btoa(svgString)}`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center">
       <nav className="w-full bg-primary text-white p-4 shadow-md">
@@ -62,7 +86,6 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-8xl mt-10">
-
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700">Upload GPX File</label>
@@ -95,14 +118,19 @@ const App: React.FC = () => {
             <button onClick={() => setZoomLevel(zoomLevel < 0 ? 1 : zoomLevel + 1)} className="p-2 bg-red-500 text-white rounded mx-2 hover:bg-red-600">
               +
             </button>
+            <button onClick={() => { }} className="p-2 bg-gray-500 text-white rounded mx-2 hover:bg-red-600">
+              Snap end to summit
+            </button>
+            <button onClick={() => exportToPng()} className="p-2 bg-orange-500 text-white rounded mx-2 hover:bg-red-600">
+              Export
+            </button>
           </div>
 
           <div className="mt-8">
             {climbProfile && (
               <>
+                <ClimbProfileChart climbProfile={climbProfile} zoomLevel={zoomLevel} svgRef={svgRef} />
                 <Minimap climbProfile={originalClimbProfile!} setStartKm={setStartKm} setEndKm={setEndKm} />
-
-                <ClimbProfileChart climbProfile={climbProfile} zoomLevel={zoomLevel} />
                 <RouteVisualizer route={gpx} startKm={startKm} endKm={endKm} />
                 <ClimbProfileTable climbProfile={climbProfile} />
               </>

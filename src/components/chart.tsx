@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import { ClimbProfile } from '../lib/climbprofile';
 import Section from '../lib/section';
@@ -6,35 +6,11 @@ import Section from '../lib/section';
 interface ClimbProfileProps {
     climbProfile: ClimbProfile;
     zoomLevel?: number;
+    svgRef: React.RefObject<SVGSVGElement>; // Add svgRef as a prop
 }
 
-const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile, zoomLevel = 1 }) => {
-    const svgRef = useRef<SVGSVGElement>(null);
+const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile, zoomLevel = 1, svgRef }) => {
     const [height, setHeight] = useState(400); // Adjusted default height
-
-    const exportToPng = () => {
-        const svg = svgRef.current;
-        if (!svg) return;
-
-        const serializer = new XMLSerializer();
-        const svgString = serializer.serializeToString(svg);
-
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-
-        const img = new Image();
-        img.onload = () => {
-            canvas.width = svg.clientWidth;
-            canvas.height = svg.clientHeight;
-            context?.drawImage(img, 0, 0);
-
-            const a = document.createElement('a');
-            a.download = 'climb-profile.png';
-            a.href = canvas.toDataURL('image/png');
-            a.click();
-        };
-        img.src = `data:image/svg+xml;base64,${btoa(svgString)}`;
-    };
 
     // First useEffect to handle height adjustment based on zoomLevel
     useEffect(() => {
@@ -66,14 +42,7 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile, zoomLeve
         drawAxes(svg, xScale, yScale, width, height, margin);
     }, [climbProfile, height]);
 
-    return (
-        <div>
-            <svg ref={svgRef} />
-            <button onClick={exportToPng} className="mt-4 mb-4 ml-8 p-2 bg-orange-500 text-white rounded">
-                Export to PNG
-            </button>
-        </div>
-    );
+    return <svg ref={svgRef} />;
 };
 
 // Helper method to create X scale
@@ -211,19 +180,24 @@ const drawAxes = (
     height: number,
     margin: { top: number; right: number; bottom: number; left: number }
 ) => {
-    // Add X-axis
+    // Generate tick values for the X-axis (1 km interval)
+    const xDomain = xScale.domain();
+    const xTickValues = d3.range(Math.ceil(xDomain[0]), Math.floor(xDomain[1]) + 1, 1);
+
+    // Add X-axis with 1 km interval
     svg.append('g')
         .attr('transform', `translate(${margin.left},${height + margin.top})`)
         .call(d3.axisBottom(xScale)
-            .ticks(5)
-            .tickFormat(d => `${d}`));
+            .tickValues(xTickValues)
+            .tickFormat(d => `${d}`)); // Label ticks with "km"
 
     // Add Y-axis on the right side with padding
     svg.append('g')
         .attr('transform', `translate(${width + margin.left},${margin.top})`)
         .call(d3.axisRight(yScale)
             .ticks(5)
-            .tickFormat(d => `${d} m`));
+            .tickFormat(d => `${d}`)); // Label ticks with "m"
 };
+
 
 export default ClimbProfileChart;

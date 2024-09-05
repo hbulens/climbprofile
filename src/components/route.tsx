@@ -61,14 +61,14 @@ const RouteVisualizer: React.FC<RouteVisualizerProps> = ({ route, startKm = 0, e
     if (!filteredCoordinates.length) return null;
 
     return (
-        <div className="mt-8">
+        <>
             <div style={{ height: '300px', width: '100%' }}>
                 <MapContainer style={{ width: '100%', height: '100%' }} bounds={bounds}>
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     <Polyline pathOptions={{ fillColor: 'red', color: '#e86100' }} positions={filteredCoordinates} />
                 </MapContainer>
             </div>
-        </div>
+        </>
     );
 };
 
