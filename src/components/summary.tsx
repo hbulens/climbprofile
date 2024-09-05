@@ -1,5 +1,5 @@
 import React from 'react';
-import { ClimbProfile } from './climbprofile'; // Adjust the import path as necessary
+import { ClimbProfile } from '../lib/climbprofile';
 
 interface RideSummaryProps {
     climbProfile: ClimbProfile;
