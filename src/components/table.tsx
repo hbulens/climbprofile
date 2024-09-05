@@ -25,7 +25,7 @@ const ClimbProfileTable: React.FC<ClimbProfileTableProps> = ({ climbProfile }) =
                     <thead>
                         <tr>
                             <th className="py-2 px-4 border-b bg-gray-100 text-left text-sm font-semibold text-gray-700">Start (km)</th>
-                            <th className="py-2 px-4 border-b bg-gray-100 text-left text-sm font-semibold text-gray-700">Altitude (m)</th>
+                            <th className="py-2 px-4 border-b bg-gray-100 text-left text-sm font-semibold text-gray-700">Elevation (m)</th>
                             <th className="py-2 px-4 border-b bg-gray-100 text-left text-sm font-semibold text-gray-700">Gradient (%)</th>
                             <th className="py-2 px-4 border-b bg-gray-100 text-left text-sm font-semibold text-gray-700">Distance (m)</th>
                         </tr>
@@ -34,7 +34,7 @@ const ClimbProfileTable: React.FC<ClimbProfileTableProps> = ({ climbProfile }) =
                         {climbProfile.sections.map((section, index) => (
                             <tr key={index} className="hover:bg-gray-50">
                                 <td className="py-2 px-4 border-b text-sm text-gray-700">{section.start.toFixed(2)}</td>
-                                <td className="py-2 px-4 border-b text-sm text-gray-700">{section.highest.toFixed(2)}</td>
+                                <td className="py-2 px-4 border-b text-sm text-gray-700">{section.maxElevation.toFixed(2)}</td>
                                 <td className="py-2 px-4 border-b text-sm text-gray-700">{section.gradient.toFixed(2)}</td>
                                 <td className="py-2 px-4 border-b text-sm text-gray-700">{section.delta.toFixed(2)}</td>
                             </tr>

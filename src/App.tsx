@@ -16,6 +16,7 @@ const App: React.FC = () => {
   const [gpx, setGpx] = useState<string>("");
   const [interval, setInterval] = useState<number>(1000);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [chartWidth, setChartWidth] = useState<number>(800); // State for chart width
 
   const svgRef = useRef<SVGSVGElement>(null); // Create svgRef for ClimbProfileChart
 
@@ -79,6 +80,10 @@ const App: React.FC = () => {
     img.src = `data:image/svg+xml;base64,${btoa(svgString)}`;
   };
 
+  // Handler for increasing or decreasing chart width
+  const increaseWidth = () => setChartWidth(prev => Math.min(prev + 50, 1600)); // Max width limit
+  const decreaseWidth = () => setChartWidth(prev => Math.max(prev - 50, 400));  // Min width limit
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center">
       <nav className="w-full bg-primary text-white p-4 shadow-md">
@@ -115,18 +120,29 @@ const App: React.FC = () => {
               </select>
             </div>
 
+
+            <button onClick={() => { }} className="p-2 bg-gray-500 text-white rounded hover:bg-red-600">
+              Snap end to summit
+            </button>
+            <button onClick={() => exportToPng()} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600">
+              Export
+            </button>
+          </div>
+          <div className="flex items-center space-x-4 mb-4">
             <div className="flex items-center space-x-2">
-              <button onClick={() => setZoomLevel(zoomLevel > 0 ? -1 : zoomLevel - 1)} className="p-2 bg-green-500 text-white rounded hover:bg-green-600">
-                -
+              <button onClick={decreaseWidth} className="p-2 bg-orange-500 text-white rounded hover:bg-blue-600 mt-1" >
+                ⬅️
               </button>
-              <button onClick={() => setZoomLevel(zoomLevel < 0 ? 1 : zoomLevel + 1)} className="p-2 bg-red-500 text-white rounded hover:bg-red-600">
-                +
-              </button>
-              <button onClick={() => { }} className="p-2 bg-gray-500 text-white rounded hover:bg-red-600">
-                Snap end to summit
-              </button>
-              <button onClick={() => exportToPng()} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600">
-                Export
+              <div className="flex flex-col items-center">
+                <button onClick={() => setZoomLevel(zoomLevel < 0 ? 1 : zoomLevel + 1)} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600 mb-2">
+                  ⬆️
+                </button>
+                <button onClick={() => setZoomLevel(zoomLevel > 0 ? -1 : zoomLevel - 1)} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600">
+                  ⬇️
+                </button>
+              </div>
+              <button onClick={increaseWidth} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600 mb-1">
+                ➡️
               </button>
             </div>
           </div>
@@ -134,7 +150,7 @@ const App: React.FC = () => {
           <div className="mt-8">
             {climbProfile && (
               <>
-                <ClimbProfileChart climbProfile={climbProfile} zoomLevel={zoomLevel} svgRef={svgRef} />
+                <ClimbProfileChart climbProfile={climbProfile} zoomLevel={zoomLevel} svgRef={svgRef} chartWidth={chartWidth} />
                 <div className="">
                   <Minimap climbProfile={originalClimbProfile!} setStartKm={setStartKm} setEndKm={setEndKm} />
                 </div>

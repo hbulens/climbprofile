@@ -6,10 +6,11 @@ import Section from '../lib/section';
 interface ClimbProfileProps {
     climbProfile: ClimbProfile;
     zoomLevel?: number;
-    svgRef: React.RefObject<SVGSVGElement>; // Add svgRef as a prop
+    svgRef: React.RefObject<SVGSVGElement>;
+    chartWidth?: number;
 }
 
-const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile, zoomLevel = 1, svgRef }) => {
+const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile, zoomLevel = 1, svgRef, chartWidth = 800 }) => {
     const [height, setHeight] = useState(400); // Adjusted default height
 
     // First useEffect to handle height adjustment based on zoomLevel
@@ -26,7 +27,7 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile, zoomLeve
 
         // Set up dimensions and margins
         const margin = { top: 5, right: 60, bottom: 40, left: 50 }; // Increased left margin for padding
-        const width = (svgRef.current?.clientWidth || 800) - margin.left - margin.right;
+        const width = chartWidth - margin.left - margin.right; // Use chartWidth directly
 
         const data = climbProfile.sections;
         const xScale = createXScale(data, width);
@@ -37,9 +38,9 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile, zoomLeve
 
         setupSvgAttributes(svg, margin, width, height);
         drawChartSections(svg, data, xScale, yScale, height, margin);
-        drawAltitudes(svg, data, xScale, yScale, margin);
+        drawElevations(svg, data, xScale, yScale, margin);
         drawAxes(svg, xScale, yScale, width, height, margin);
-    }, [climbProfile, height]);
+    }, [climbProfile, height, chartWidth]); // Include chartWidth in the dependency array
 
     return <svg ref={svgRef} />;
 };
@@ -54,12 +55,14 @@ const createXScale = (data: Section[], width: number) => {
 // Helper method to create Y scale
 const createYScale = (data: Section[], height: number) => {
     const yPadding = 80; // Additional padding on the Y-axis
+
+    // Ensure the min and max elevation values are recalculated based on the data
+    const minElevation = d3.min(data, d => d.minElevation) || 0;
+    const endElevation = d3.max(data, d => d.endElevation) || 0;
+
     return d3.scaleLinear()
-        .domain([
-            (d3.min(data, d => d.lowest) || 0) - yPadding,
-            (d3.max(data, d => d.highest) || 0) + yPadding
-        ])
-        .nice()
+        .domain([minElevation - yPadding, endElevation + yPadding])
+        .nice() // Makes the axis end in round values
         .range([height, 0]);
 };
 
@@ -73,7 +76,7 @@ const setupSvgAttributes = (
     svg
         .attr('viewBox', `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
         .attr('preserveAspectRatio', 'xMidYMid meet')
-        .style('width', '100%')
+        .style('width', `${width + margin.left + margin.right}px`) // Set SVG width based on chartWidth
         .style('height', '100%');
 };
 
@@ -103,12 +106,12 @@ const drawChartSections = (
             const next = data[i + 1];
             const line = d3.line<Section>()
                 .x(d => xScale(d.start) + margin.left)
-                .y(d => yScale(d.highest));
+                .y(d => yScale(d.endElevation));
 
             const area = d3.area<Section>()
                 .x(d => xScale(d.start) + margin.left)
                 .y0(height)
-                .y1(d => yScale(d.highest));
+                .y1(d => yScale(d.endElevation));
 
             // Draw the area for the current segment
             svg.append('path')
@@ -128,7 +131,7 @@ const drawChartSections = (
             // Add gradient percentage labels (in white)
             svg.append('text')
                 .attr('x', xScale(d.start) + margin.left + (xScale(next.start) - xScale(d.start)) / 2)
-                .attr('y', yScale(d.highest) + 20)
+                .attr('y', yScale(d.endElevation) + 20)
                 .attr('text-anchor', 'middle')
                 .attr('fill', '#FFFFFF') // White text color
                 .style('font-size', '12px')
@@ -138,29 +141,29 @@ const drawChartSections = (
     });
 };
 
-// Helper method to draw altitude labels
-const drawAltitudes = (
+// Helper method to draw elevation labels
+const drawElevations = (
     svg: d3.Selection<SVGSVGElement | null, unknown, null, undefined>,
     data: Section[],
     xScale: d3.ScaleLinear<number, number, never>,
     yScale: d3.ScaleLinear<number, number, never>,
     margin: { top: number; right: number; bottom: number; left: number }
 ) => {
-    // Add altitude at the beginning of the chart (inside the chart area)
+    // Add elevation at the beginning of the chart (inside the chart area)
     svg.append('text')
         .attr('x', xScale(data[0].start) + margin.left)
-        .attr('y', yScale(data[0].highest))
+        .attr('y', yScale(data[0].endElevation))
         .attr('text-anchor', 'start')
         .attr('fill', 'black') // Black text color
         .style('font-size', '12px')
         .style('font-weight', 'bold')
-        .attr('transform', `rotate(-90, ${xScale(data[0].start) + margin.left - 10}, ${yScale(data[0].highest)})`) // Rotate text vertically
-        .text(`${Math.round(data[0].lowest)} m`);
+        .attr('transform', `rotate(-90, ${xScale(data[0].start) + margin.left - 10}, ${yScale(data[0].endElevation)})`) // Rotate text vertically
+        .text(`${Math.round(data[0].minElevation)} m`);
 
-    // Add altitude at the end of the chart (inside the chart area)
+    // Add elevation at the end of the chart (inside the chart area)
     const lastPoint = data[data.length - 1];
     const lastPointXPos = xScale(lastPoint.start) + margin.left;
-    const lastPointYPos = yScale(lastPoint.highest);
+    const lastPointYPos = yScale(lastPoint.endElevation);
 
     // Adjust position to avoid overlap with the line chart
     svg.append('text')
@@ -171,7 +174,7 @@ const drawAltitudes = (
         .style('font-size', '12px')
         .style('font-weight', 'bold')
         .attr('transform', `rotate(-90, ${lastPointXPos - 30 - 0}, ${lastPointYPos - 30})`) // Rotate text vertically
-        .text(`${Math.round(lastPoint.highest)}m`);
+        .text(`${Math.round(lastPoint.endElevation)}m`);
 };
 
 // Helper method to draw X and Y axes
