@@ -15,19 +15,8 @@ export class RouteCalculator {
         const subroute = this.select(startKm, endKm);
         const subroutePerInterval = _.groupBy(subroute, (point: Point) => Math.floor(point.distance / intervalLength));
 
-        // Initialize variables for the climb profile
-        const sections: Section[] = [];
-        let totalClimbing = 0;
-        let totalDownhill = 0;
-
-        Object.entries(subroutePerInterval).forEach(([segment, points], index) => {
-            const sectionNo = parseFloat(segment);
-            const isLastSection = (index === Object.keys(subroutePerInterval).length - 1);
-
-            const waypoints = points as Array<Point>;
-
-            // Calculate total meters of climbing and descending
-            const { climbing, downhill } = waypoints.reduce((acc, pt, idx) => {
+        const calculateElevationChanges = (waypoints: Point[]): { climbing: number; downhill: number } => {
+            return waypoints.reduce((acc, pt, idx) => {
                 if (idx > 0) {
                     const prev: Point = waypoints[idx - 1];
                     const elevationChange = pt.elevation - prev.elevation;
@@ -40,30 +29,45 @@ export class RouteCalculator {
                 }
                 return acc;
             }, { climbing: 0, downhill: 0 });
+        };
 
-            // Update overall total elevation gain/loss
-            totalClimbing += climbing;
-            totalDownhill += downhill;
+        // Helper method to calculate sections
+        const calculateSections = (subroute: Point[], subroutePerInterval: { [key: string]: Point[] }, intervalLength: number): Section[] => {
+            const sections: Section[] = [];
 
-            // For the last section, use the actual totalRouteLength instead of the section length
-            const endDistance = isLastSection ? (subroute[subroute.length - 1]?.distance || 0) / 1000 : (sectionNo + 1) * intervalLength / 1000;
-            const startDistance = sectionNo * intervalLength / 1000;  // Start distance in km
+            Object.entries(subroutePerInterval).forEach(([segment, points], index) => {
+                const sectionNo = parseFloat(segment);
+                const isLastSection = (index === Object.keys(subroutePerInterval).length - 1);
 
-            const segmentLength = isLastSection ? endDistance * 1000 - sectionNo * intervalLength : intervalLength;
+                const waypoints = points as Array<Point>;
 
-            sections.push({
-                start: startDistance,
-                end: endDistance,
-                coordinate: _.last(waypoints).lat + "," + _.last(waypoints).lon,
-                distance: endDistance - startDistance,
-                delta: climbing - downhill,
-                minElevation: _.minBy(subroute, x => x.elevation)?.elevation ?? 0,
-                maxElevation: _.maxBy(subroute, x => x.elevation)?.elevation ?? 0,
-                startElevation: _.first(waypoints)?.elevation ?? 0,
-                endElevation: _.last(waypoints)?.elevation ?? 0,
-                gradient: Math.round((climbing - downhill) / segmentLength * 100),
+                // Calculate total meters of climbing and descending
+                const { climbing, downhill } = calculateElevationChanges(waypoints);
+
+                // For the last section, use the actual totalRouteLength instead of the section length
+                const endDistance = isLastSection ? (subroute[subroute.length - 1]?.distance || 0) / 1000 : (sectionNo + 1) * intervalLength / 1000;
+                const startDistance = sectionNo * intervalLength / 1000;  // Start distance in km
+
+                const segmentLength = isLastSection ? endDistance * 1000 - sectionNo * intervalLength : intervalLength;
+
+                sections.push({
+                    start: startDistance,
+                    end: endDistance,
+                    coordinate: _.last(waypoints).lat + "," + _.last(waypoints).lon,
+                    distance: endDistance - startDistance,
+                    delta: climbing - downhill,
+                    minElevation: _.minBy(subroute, x => x.elevation)?.elevation ?? 0,
+                    maxElevation: _.maxBy(subroute, x => x.elevation)?.elevation ?? 0,
+                    startElevation: _.first(waypoints)?.elevation ?? 0,
+                    endElevation: _.last(waypoints)?.elevation ?? 0,
+                    gradient: Math.round((climbing - downhill) / segmentLength * 100),
+                });
             });
-        });
+
+            return sections;
+        };
+
+        const sections = calculateSections(subroute, subroutePerInterval, intervalLength);
 
         // Calculate total distance based on the actual section length
         const totalDistance = sections.reduce((acc, section) => acc + (section.end - section.start), 0);
@@ -73,12 +77,12 @@ export class RouteCalculator {
             minElevation: _.minBy(sections, x => x.minElevation)?.minElevation ?? 0,
             maxElevation: _.maxBy(sections, x => x.maxElevation)?.maxElevation ?? 0,
             distance: totalDistance,
-            averageGradient: (totalClimbing / (totalDistance * 100)),
-            totalClimbing: totalClimbing,
-            totalDescending: totalDownhill,
+            averageGradient: (sections.reduce((acc, section) => acc + section.gradient * section.distance, 0) / totalDistance) || 0,
+            totalClimbing: sections.reduce((acc, section) => acc + section.delta, 0),
+            totalDescending: sections.reduce((acc, section) => acc - section.delta, 0),
             sections: sections,
-            rawGpx: subroute
-        };
+            rawGpx: calculateSections(subroute, _.groupBy(subroute, (point: Point) => Math.floor(point.distance / 10)), 10)
+        }
 
         console.log(climbProfile);
         return climbProfile;

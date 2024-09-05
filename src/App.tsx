@@ -16,7 +16,8 @@ const App: React.FC = () => {
   const [gpx, setGpx] = useState<string>("");
   const [interval, setInterval] = useState<number>(1000);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
-  const [chartWidth, setChartWidth] = useState<number>(800); // State for chart width
+  const [chartWidth, setChartWidth] = useState<number>(1200); // State for chart width
+  const [showActualElevation, setShowActualElevation] = useState<boolean>(false);
 
   const svgRef = useRef<SVGSVGElement>(null); // Create svgRef for ClimbProfileChart
 
@@ -124,6 +125,9 @@ const App: React.FC = () => {
             <button onClick={() => { }} className="p-2 bg-gray-500 text-white rounded hover:bg-red-600">
               Snap end to summit
             </button>
+            <button onClick={() => setShowActualElevation(!showActualElevation)} className="p-2 bg-gray-500 text-white rounded hover:bg-red-600">
+              Toggle actual route
+            </button>
             <button onClick={() => exportToPng()} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600">
               Export
             </button>
@@ -150,7 +154,7 @@ const App: React.FC = () => {
           <div className="mt-8">
             {climbProfile && (
               <>
-                <ClimbProfileChart climbProfile={climbProfile} zoomLevel={zoomLevel} svgRef={svgRef} chartWidth={chartWidth} />
+                <ClimbProfileChart climbProfile={climbProfile} zoomLevel={zoomLevel} svgRef={svgRef} chartWidth={chartWidth} showActualElevation={showActualElevation} />
                 <div className="">
                   <Minimap climbProfile={originalClimbProfile!} setStartKm={setStartKm} setEndKm={setEndKm} />
                 </div>

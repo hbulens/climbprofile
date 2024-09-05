@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import { ClimbProfile } from '../lib/climbprofile';
 import Section from '../lib/section';
-
 interface ClimbProfileProps {
     climbProfile: ClimbProfile;
     zoomLevel?: number;
     svgRef: React.RefObject<SVGSVGElement>;
     chartWidth?: number;
+    showActualElevation: boolean;
 }
 
-const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile, zoomLevel = 1, svgRef, chartWidth = 800 }) => {
+const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile, zoomLevel = 1, svgRef, chartWidth = 800, showActualElevation = false }) => {
     const [height, setHeight] = useState(400); // Adjusted default height
 
     // First useEffect to handle height adjustment based on zoomLevel
@@ -38,9 +38,14 @@ const ClimbProfileChart: React.FC<ClimbProfileProps> = ({ climbProfile, zoomLeve
 
         setupSvgAttributes(svg, margin, width, height);
         drawChartSections(svg, data, xScale, yScale, height, margin);
-        drawElevations(svg, data, xScale, yScale, margin);
+
+        if (showActualElevation)
+            drawLine(svg, climbProfile.rawGpx, xScale, yScale, margin, "blue");
+
+        drawLine(svg, data, xScale, yScale, margin);
+        drawStartEndElevations(svg, data, xScale, yScale, margin);
         drawAxes(svg, xScale, yScale, width, height, margin);
-    }, [climbProfile, height, chartWidth]); // Include chartWidth in the dependency array
+    }, [climbProfile, height, chartWidth, showActualElevation]); // Include chartWidth in the dependency array
 
     return <svg ref={svgRef} />;
 };
@@ -89,7 +94,6 @@ const drawChartSections = (
     height: number,
     margin: { top: number; right: number; bottom: number; left: number }
 ) => {
-    const getLineColor = () => '#000000'; // Black for the line color
 
     const getAreaColor = (gradient: number) => {
         if (gradient < -2) return 'rgba(128, 128, 128, 0.7)'; // Light gray for negative gradient
@@ -104,9 +108,6 @@ const drawChartSections = (
     data.forEach((d, i) => {
         if (i < data.length - 1) {
             const next = data[i + 1];
-            const line = d3.line<Section>()
-                .x(d => xScale(d.start) + margin.left)
-                .y(d => yScale(d.endElevation));
 
             const area = d3.area<Section>()
                 .x(d => xScale(d.start) + margin.left)
@@ -119,14 +120,6 @@ const drawChartSections = (
                 .attr('fill', getAreaColor(d.gradient))
                 .attr('stroke', 'none')
                 .attr('d', area);
-
-            // Draw the line for the current segment
-            svg.append('path')
-                .datum([d, next])
-                .attr('fill', 'none')
-                .attr('stroke', getLineColor())
-                .attr('stroke-width', 3)
-                .attr('d', line);
 
             // Add gradient percentage labels (in white)
             svg.append('text')
@@ -141,8 +134,41 @@ const drawChartSections = (
     });
 };
 
+
+const drawLine = (
+    svg: d3.Selection<SVGSVGElement | null, unknown, null, undefined>,
+    data: Section[],
+    xScale: d3.ScaleLinear<number, number, never>,
+    yScale: d3.ScaleLinear<number, number, never>,
+    margin?: { top: number; right: number; bottom: number; left: number },
+    color: string = '#000000'
+) => {
+
+    // Define line generator
+    const mg = margin ?? { top: 5, right: 60, bottom: 40, left: 10 }; // Increased left margin for padding
+
+    const lineGenerator = d3.line<Section>()
+        .x(d => xScale(d.start) + mg.left)
+        .y(d => yScale(d.endElevation));
+
+    // Draw lines and labels for each segment
+    data.forEach((d, i) => {
+        if (i < data.length - 1) {
+            const next = data[i + 1];
+
+            // Draw the line for the current segment
+            svg.append('path')
+                .datum([d, next])
+                .attr('fill', 'none')
+                .attr('stroke', color)
+                .attr('stroke-width', 3)
+                .attr('d', lineGenerator);
+        }
+    });
+};
+
 // Helper method to draw elevation labels
-const drawElevations = (
+const drawStartEndElevations = (
     svg: d3.Selection<SVGSVGElement | null, unknown, null, undefined>,
     data: Section[],
     xScale: d3.ScaleLinear<number, number, never>,

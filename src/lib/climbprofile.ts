@@ -1,4 +1,3 @@
-import Point from "./point";
 import Section from "./section";
 
 export interface ClimbProfile {
@@ -9,5 +8,5 @@ export interface ClimbProfile {
     sections: Section[];
     totalClimbing: number;
     totalDescending: number;
-    rawGpx: Point[];
+    rawGpx: Section[];
 }
