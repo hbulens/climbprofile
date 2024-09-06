@@ -89,23 +89,27 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center">
       <nav className="w-full bg-primary text-white p-4 shadow-md">
         <div className="max-w-8xl mx-auto flex justify-between items-center">
+          {/* Left Side - Logo */}
           <img src="logo.png" alt="Logo" style={{ height: 50 }} />
+
+          {/* Right Side - File Upload and Export Button */}
+          <div className="flex items-center space-x-4">
+            <input
+              type="file"
+              accept=".gpx"
+              onChange={handleFileUpload}
+              className="block text-sm text-gray-500 border border-gray-300 rounded-lg cursor-pointer focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 p-2 bg-white text-gray-700"
+            />
+            <button onClick={() => exportToPng()} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600">
+              Export
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* Main Content */}
       <div className="bg-white p-8 mt-2 rounded-lg shadow-lg w-full">
-        <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Upload GPX File</label>
-            <input
-              type="file"
-              accept=".gpx"
-              onChange={handleFileUpload}
-              className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg cursor-pointer focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mt-2 p-2"
-            />
-          </div>
-
+        <div className="space-y-1">
           <div className="flex items-center space-x-4 mb-4">
             <div className="flex items-center space-x-4">
               <label className="block text-sm font-medium text-gray-700">Interval (meters)</label>
@@ -121,33 +125,30 @@ const App: React.FC = () => {
               </select>
             </div>
 
-
             <button onClick={() => { }} className="p-2 bg-gray-500 text-white rounded hover:bg-red-600">
               Snap end to summit
             </button>
             <button onClick={() => setShowActualElevation(!showActualElevation)} className="p-2 bg-gray-500 text-white rounded hover:bg-red-600">
               Toggle actual route
             </button>
-            <button onClick={() => exportToPng()} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600">
-              Export
-            </button>
-          </div>
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="flex items-center space-x-2">
-              <button onClick={decreaseWidth} className="p-2 bg-orange-500 text-white rounded hover:bg-blue-600 mt-1" >
-                ⬅️
-              </button>
-              <div className="flex flex-col items-center">
-                <button onClick={() => setZoomLevel(zoomLevel < 0 ? 1 : zoomLevel + 1)} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600 mb-2">
-                  ⬆️
+
+            <div className="flex items-center space-x-4 mb-4">
+              <div className="flex items-center space-x-2">
+                <button onClick={decreaseWidth} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600" >
+                  ⬅️
                 </button>
-                <button onClick={() => setZoomLevel(zoomLevel > 0 ? -1 : zoomLevel - 1)} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600">
-                  ⬇️
+                <div className="flex flex-col items-center">
+                  <button onClick={() => setZoomLevel(zoomLevel > 0 ? -1 : zoomLevel - 1)} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600">
+                    ⬆️
+                  </button>
+                  <button onClick={() => setZoomLevel(zoomLevel < 0 ? 1 : zoomLevel + 1)} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600 mt-2">
+                    ⬇️
+                  </button>
+                </div>
+                <button onClick={increaseWidth} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600 mb-1">
+                  ➡️
                 </button>
               </div>
-              <button onClick={increaseWidth} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600 mb-1">
-                ➡️
-              </button>
             </div>
           </div>
 
@@ -158,9 +159,9 @@ const App: React.FC = () => {
                 <div className="">
                   <Minimap climbProfile={originalClimbProfile!} setStartKm={setStartKm} setEndKm={setEndKm} />
                 </div>
-                <div className="flex space-x-4 mt-4" style={{ height: '300px' }}>
-                  <div className="flex-1">
-                    <RouteVisualizer route={gpx} startKm={startKm} endKm={endKm} />
+                <div className="flex space-x-4 mt-4">
+                  <div className="flex">
+                    <RouteVisualizer route={gpx} startKm={startKm} endKm={endKm} height={400} width={600} />
                   </div>
                   <div className="flex-none w-80">
                     <RideSummary climbProfile={climbProfile} />

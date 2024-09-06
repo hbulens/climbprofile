@@ -25,7 +25,7 @@ const Minimap: React.FC<MinimapProps> = ({ climbProfile, setStartKm, setEndKm })
         // Set up dimensions and margins
         const margin = { top: 10, right: 0, bottom: 0, left: 0 }; // Added left margin
         const width = (svgRef.current?.clientWidth || 800) - margin.left - margin.right;
-        const lineHeight = 50 - margin.top - margin.bottom; // Set height to 200px
+        const lineHeight = 30 - margin.top - margin.bottom; // Set height to 200px
         const height = lineHeight + 10;
 
         const xScale = d3.scaleLinear()
