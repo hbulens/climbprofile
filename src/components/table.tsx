@@ -31,7 +31,7 @@ const ClimbProfileTable: React.FC<ClimbProfileTableProps> = ({ climbProfile }) =
                         </tr>
                     </thead>
                     <tbody>
-                        {climbProfile.intervals.map((section, index) => (
+                        {(climbProfile.intervals ?? []).map((section, index) => (
                             <tr key={index} className="hover:bg-gray-50">
                                 <td className="py-2 px-4 border-b text-sm text-gray-700">{section.start.toFixed(2)}</td>
                                 <td className="py-2 px-4 border-b text-sm text-gray-700">{section.maxElevation.toFixed(2)}</td>
