@@ -1,12 +1,12 @@
 import Section from "./section";
 
 export interface ClimbProfile {
-    minElevation: number; // Minimum elevation in meters
-    maxElevation: number; // Maximum elevation in meters
+    minElevation: number;
+    maxElevation: number;
     distance: number;
-    averageGradient: number;
-    sections: Section[];
+    gradient: number;
+    rawGpx?: Section[];
+    intervals?: Section[];
     totalClimbing: number;
     totalDescending: number;
-    rawGpx: Section[];
 }

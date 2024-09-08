@@ -9,7 +9,7 @@ const RideSummary: React.FC<RideSummaryProps> = ({ climbProfile }) => {
     const {
         distance,
         maxElevation,
-        averageGradient,
+        gradient,
         totalClimbing,
         totalDescending
     } = climbProfile;
@@ -20,7 +20,7 @@ const RideSummary: React.FC<RideSummaryProps> = ({ climbProfile }) => {
             <ul className="list-disc pl-5">
                 <li><strong>Distance:</strong> {distance.toFixed(2)} km</li>
                 <li><strong>Highest Point:</strong> {maxElevation} m</li>
-                <li><strong>Average Gradient:</strong> {(averageGradient * 10).toFixed(2)}%</li>
+                <li><strong>Average Gradient:</strong> {(gradient).toFixed(2)}%</li>
                 <li><strong>Total Climbing:</strong> {totalClimbing.toFixed(2)} m</li>
                 <li><strong>Total Downhill:</strong> {totalDescending.toFixed(2)} m</li>
             </ul>

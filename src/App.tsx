@@ -16,10 +16,12 @@ const App: React.FC = () => {
   const [gpx, setGpx] = useState<string>("");
   const [interval, setInterval] = useState<number>(1000);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
-  const [chartWidth, setChartWidth] = useState<number>(1200); // State for chart width
+  const [chartWidth, setChartWidth] = useState<number>(1200);
   const [showActualElevation, setShowActualElevation] = useState<boolean>(false);
 
-  const svgRef = useRef<SVGSVGElement>(null); // Create svgRef for ClimbProfileChart
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  const intervals = [10, 20, 50, 100, 200, 500, 1000, 10000]; // Supported intervals
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -29,7 +31,6 @@ const App: React.FC = () => {
         setGpx(e.target?.result as string);
         setOriginalClimbProfile(calculateProfile(e.target?.result as string));
       };
-
       reader.readAsText(file);
     }
   };
@@ -54,6 +55,22 @@ const App: React.FC = () => {
       setZoomLevel(1);
     }
   }, [gpx]);
+
+  // Function to cycle interval down
+  const decreaseInterval = () => {
+    const currentIndex = intervals.indexOf(interval);
+    if (currentIndex > 0) {
+      setInterval(intervals[currentIndex - 1]);
+    }
+  };
+
+  // Function to cycle interval up
+  const increaseInterval = () => {
+    const currentIndex = intervals.indexOf(interval);
+    if (currentIndex < intervals.length - 1) {
+      setInterval(intervals[currentIndex + 1]);
+    }
+  };
 
   // Function to export SVG to PNG
   const exportToPng = () => {
@@ -81,9 +98,8 @@ const App: React.FC = () => {
     img.src = `data:image/svg+xml;base64,${btoa(svgString)}`;
   };
 
-  // Handler for increasing or decreasing chart width
-  const increaseWidth = () => setChartWidth(prev => Math.min(prev + 50, 1600)); // Max width limit
-  const decreaseWidth = () => setChartWidth(prev => Math.max(prev - 50, 400));  // Min width limit
+  const increaseWidth = () => setChartWidth((prev) => Math.min(prev + 50, 1600));
+  const decreaseWidth = () => setChartWidth((prev) => Math.max(prev - 50, 400));
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center">
@@ -116,16 +132,15 @@ const App: React.FC = () => {
             {/* Interval Section */}
             <div className="flex flex-col md:flex-row items-center md:space-x-4 space-y-2 md:space-y-0">
               <label className="block text-sm font-medium text-gray-700">Interval (meters)</label>
-              <select
-                value={interval}
-                onChange={(e) => setInterval(parseInt(e.target.value))}
-                className="block w-full md:w-24 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
-              >
-                <option value={100}>100m</option>
-                <option value={200}>200m</option>
-                <option value={500}>500m</option>
-                <option value={1000}>1000m</option>
-              </select>
+              <div className="flex items-center space-x-2">
+                <button onClick={decreaseInterval} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600">
+                  -
+                </button>
+                <span>{interval}m</span>
+                <button onClick={increaseInterval} className="p-2 bg-orange-500 text-white rounded hover:bg-red-600">
+                  +
+                </button>
+              </div>
             </div>
 
             {/* Snap end to summit button */}
@@ -159,7 +174,6 @@ const App: React.FC = () => {
             </div>
           </div>
 
-
           <div className="mt-8">
             {climbProfile && (
               <>
@@ -174,6 +188,8 @@ const App: React.FC = () => {
                   <div className="flex-none w-80">
                     <RideSummary climbProfile={climbProfile} />
                   </div>
+                  <div className="flex-none w-80">
+                  </div>
                 </div>
                 <ClimbProfileTable climbProfile={climbProfile} />
               </>
@@ -186,3 +202,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+

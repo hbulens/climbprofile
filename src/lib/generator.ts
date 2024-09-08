@@ -31,9 +31,9 @@ export class RouteCalculator {
             }, { climbing: 0, downhill: 0 });
         };
 
-        // Helper method to calculate sections
-        const calculateSections = (subroute: Point[], subroutePerInterval: { [key: string]: Point[] }, intervalLength: number): Section[] => {
-            const sections: Section[] = [];
+        // Helper method to calculate intervals
+        const calculateintervals = (subroute: Point[], subroutePerInterval: { [key: string]: Point[] }, intervalLength: number): Section[] => {
+            const intervals: Section[] = [];
 
             Object.entries(subroutePerInterval).forEach(([segment, points], index) => {
                 const sectionNo = parseFloat(segment);
@@ -50,10 +50,9 @@ export class RouteCalculator {
 
                 const segmentLength = isLastSection ? endDistance * 1000 - sectionNo * intervalLength : intervalLength;
 
-                sections.push({
+                intervals.push({
                     start: startDistance,
                     end: endDistance,
-                    coordinate: _.last(waypoints).lat + "," + _.last(waypoints).lon,
                     distance: endDistance - startDistance,
                     delta: climbing - downhill,
                     minElevation: _.minBy(subroute, x => x.elevation)?.elevation ?? 0,
@@ -61,27 +60,29 @@ export class RouteCalculator {
                     startElevation: _.first(waypoints)?.elevation ?? 0,
                     endElevation: _.last(waypoints)?.elevation ?? 0,
                     gradient: Math.round((climbing - downhill) / segmentLength * 100),
+                    totalClimbing: climbing,
+                    totalDescending: downhill,
                 });
             });
 
-            return sections;
+            return intervals;
         };
 
-        const sections = calculateSections(subroute, subroutePerInterval, intervalLength);
+        const intervals = calculateintervals(subroute, subroutePerInterval, intervalLength);
 
         // Calculate total distance based on the actual section length
-        const totalDistance = sections.reduce((acc, section) => acc + (section.end - section.start), 0);
+        const totalDistance = intervals.reduce((acc, section) => acc + (section.end - section.start), 0);
 
         // Construct the ClimbProfile object
         const climbProfile: ClimbProfile = {
-            minElevation: _.minBy(sections, x => x.minElevation)?.minElevation ?? 0,
-            maxElevation: _.maxBy(sections, x => x.maxElevation)?.maxElevation ?? 0,
+            minElevation: _.minBy(intervals, x => x.minElevation)?.minElevation ?? 0,
+            maxElevation: _.maxBy(intervals, x => x.maxElevation)?.maxElevation ?? 0,
             distance: totalDistance,
-            averageGradient: (sections.reduce((acc, section) => acc + section.gradient * section.distance, 0) / totalDistance) || 0,
-            totalClimbing: sections.reduce((acc, section) => acc + section.delta, 0),
-            totalDescending: sections.reduce((acc, section) => acc - section.delta, 0),
-            sections: sections,
-            rawGpx: calculateSections(subroute, _.groupBy(subroute, (point: Point) => Math.floor(point.distance / 10)), 10)
+            gradient: (intervals.reduce((acc, section) => acc + section.gradient * section.distance, 0) / totalDistance) || 0,
+            totalClimbing: intervals.reduce((acc, section) => acc + section.delta, 0),
+            totalDescending: intervals.reduce((acc, section) => acc - section.delta, 0),
+            intervals: intervals,
+            rawGpx: calculateintervals(subroute, _.groupBy(subroute, (point: Point) => Math.floor(point.distance / 10)), 10)
         }
 
         console.log(climbProfile);
@@ -94,15 +95,15 @@ export class RouteCalculator {
         const endDistance = endKm * 1000;
 
         // Filter points within the specified range
-        const sections = this.gpxRoute.filter(point => point.distance >= startDistance && point.distance <= endDistance);
+        const intervals = this.gpxRoute.filter(point => point.distance >= startDistance && point.distance <= endDistance);
 
         // Reset starting point
-        if (sections.length > 0) {
-            const distanceOffset = sections[0].distance;
-            return sections.map(x => ({ ...x, distance: x.distance - distanceOffset }));
+        if (intervals.length > 0) {
+            const distanceOffset = intervals[0].distance;
+            return intervals.map(x => ({ ...x, distance: x.distance - distanceOffset }));
         }
 
-        return sections;
+        return intervals;
     }
 
     private parse(gpxData: string): void {

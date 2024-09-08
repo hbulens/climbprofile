@@ -20,7 +20,7 @@ const Minimap: React.FC<MinimapProps> = ({ climbProfile, setStartKm, setEndKm })
     const endKm = climbProfile.distance;
 
     useEffect(() => {
-        const data = climbProfile.sections;
+        const data = climbProfile.intervals;
 
         // Set up dimensions and margins
         const margin = { top: 10, right: 0, bottom: 0, left: 0 }; // Added left margin

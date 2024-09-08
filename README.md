@@ -23,7 +23,7 @@ This project allows users to generate detailed climb profiles from GPX files. It
 
 - GPX file support: Easily upload and process GPX files to generate climb profiles.
 - Interactive graphs: View detailed climb profiles with interactive graphs showing elevation changes.
-- Customizable output: Adjust settings for the climb profile to focus on specific sections or data points.
+- Customizable output: Adjust settings for the climb profile to focus on specific intervals or data points.
 
 ## Prerequisites
 
@@ -64,7 +64,7 @@ Once the server is running:
 
 - Upload a GPX file: Click the upload button and select a GPX file from your computer.
 - Generate climb profile: The application will process the file and display the climb profile.
-- Interact with the graph: Use your mouse to hover over sections of the graph for detailed elevation data.
+- Interact with the graph: Use your mouse to hover over intervals of the graph for detailed elevation data.
 
 ## Contribute
 

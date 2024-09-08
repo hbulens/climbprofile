@@ -1,14 +1,9 @@
-export default interface Section {
+import { ClimbProfile } from "./climbprofile";
+
+export default interface Section extends ClimbProfile {
     start: number;
     end: number;
-    distance: number;
-
     delta: number;
-    minElevation: number;
-    maxElevation: number;
     startElevation: number;
     endElevation: number;
-
-    gradient: number;
-    coordinate: string;
 }
