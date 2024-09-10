@@ -23,7 +23,7 @@ export class RouteCalculator {
 
                     if (elevationChange > 0) {
                         acc.climbing += elevationChange;
-                    } else {
+                    } else {                     
                         acc.downhill += Math.abs(elevationChange);
                     }
                 }
@@ -79,8 +79,8 @@ export class RouteCalculator {
             maxElevation: _.maxBy(intervals, x => x.maxElevation)?.maxElevation ?? 0,
             distance: totalDistance,
             gradient: (intervals.reduce((acc, section) => acc + section.gradient * section.distance, 0) / totalDistance) || 0,
-            totalClimbing: intervals.reduce((acc, section) => acc + section.delta, 0),
-            totalDescending: intervals.reduce((acc, section) => acc - section.delta, 0),
+            totalClimbing: intervals.reduce((acc, section) => acc + section.totalClimbing, 0),
+            totalDescending: intervals.reduce((acc, section) => acc - section.totalDescending, 0),
             intervals: intervals,
             rawGpx: calculateintervals(subroute, _.groupBy(subroute, (point: Point) => Math.floor(point.distance / 10)), 10)
         }

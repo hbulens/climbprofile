@@ -55,15 +55,15 @@ const RouteVisualizer: React.FC<RouteVisualizerProps> = ({ route, startKm = 0, e
             // Function to calculate gradient and return the appropriate color
             const gradientColors = (ele1: number, ele2: number, dist: number) => {
                 if (dist === 0) return '#00FF00';
-                const gradient = (ele2 - ele1) / dist; // Elevation change per km
+                const gradient = ((ele2 - ele1) / (dist * 1000) * 100); // Elevation change per km
 
-                if (gradient >= 14) return '#000';
-                if (gradient >= 10) return '#FF5733';
-                if (gradient >= 7) return '#FF0000';
-                if (gradient >= 4) return '#FF8C00';
-                if (gradient > 0) return '#00FF00';
-                if (gradient <= -2) return '#00FF00';
-                return '#00FF00';                      // Flat or gentle (green)
+                if (gradient < -2) return 'rgba(128, 128, 128, 0.7)'; // Light gray for negative gradient
+                if (gradient < 4) return 'rgba(0, 255, 0, 0.7)'; // Green for gradient < 4
+                if (gradient < 7) return 'rgba(255, 165, 0, 0.7)'; // Orange for 4 <= gradient < 7
+                if (gradient < 10) return 'rgba(255, 0, 0, 0.7)'; // Red for 7 <= gradient < 10
+                if (gradient < 14) return 'rgba(139, 0, 0, 0.7)'; // Dark red for 10 <= gradient < 14               
+                return 'rgba(0, 0, 0, 0.7)'; // Black for gradient >= 14
+
             };
 
             // Create colored segments based on elevation gradients
