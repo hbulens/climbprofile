@@ -83,10 +83,12 @@ const App: React.FC = () => {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
 
+    // Set canvas width and height based on chartWidth state
+    canvas.width = chartWidth; // Use the chartWidth state
+    canvas.height = svg.clientHeight; // Keep the height of the SVG
+
     const img = new Image();
     img.onload = () => {
-      canvas.width = svg.clientWidth;
-      canvas.height = svg.clientHeight;
       context?.drawImage(img, 0, 0);
 
       const a = document.createElement('a');
@@ -97,6 +99,7 @@ const App: React.FC = () => {
 
     img.src = `data:image/svg+xml;base64,${btoa(svgString)}`;
   };
+
 
   const increaseWidth = () => setChartWidth((prev) => Math.min(prev + 50, 1600));
   const decreaseWidth = () => setChartWidth((prev) => Math.max(prev - 50, 400));
